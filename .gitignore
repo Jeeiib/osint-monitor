@@ -35,6 +35,7 @@ coverage/
 .vscode/
 *.swp
 *.swo
+.CLAUDE.md
 *~
 
 # OS files
