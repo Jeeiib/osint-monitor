@@ -125,3 +125,33 @@ OPENSKY_PASSWORD=
 - Branches: `main`, `develop`, `feature/*`, `fix/*`
 - Commits conventionnels: `feat:`, `fix:`, `docs:`, `refactor:`
 - PR obligatoire pour merge sur main
+
+## Agents Spécialisés
+
+Utiliser les agents disponibles quand approprié pour maximiser l'efficacité :
+
+### Exploration & Analyse
+- **Explore** : Recherche de code, compréhension de codebase, patterns
+- **code-explorer** : Analyse approfondie de fonctionnalités existantes
+
+### Développement
+- **code-architect** : Design d'architecture et blueprints d'implémentation
+- **fullstack-developer** : Développement full-stack complet
+- **frontend-developer** : Composants React, UI, accessibilité
+- **typescript-pro** : Types avancés, génériques, optimisations TypeScript
+- **backend-architect** : APIs, microservices, schémas DB
+
+### Qualité & Review
+- **code-reviewer** : Revue de code après implémentation majeure
+- **debugger** : Débogage d'erreurs, test failures, comportements inattendus
+
+### Spécialisés
+- **prompt-engineer** : Optimisation de prompts pour features IA
+- **ui-ux-designer** : Design UX, wireframes, systèmes de design
+
+### Quand les utiliser
+- Exploration ouverte de codebase → Explore
+- Implémentation de feature complexe → code-architect puis fullstack-developer
+- Code terminé → code-reviewer
+- Bug ou erreur → debugger
+- UI/composants → frontend-developer ou ui-ux-designer

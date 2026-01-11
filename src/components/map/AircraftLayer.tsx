@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Marker, Popup } from "react-map-gl/mapbox";
 import { useAircraftStore, useFilterStore, useMapStore } from "@/lib/stores";
 import type { Aircraft } from "@/types/aircraft";
@@ -134,11 +134,17 @@ export function AircraftLayer() {
     fetchPhoto();
   }, [selectedAircraft]);
 
+  // Memoize aircraft list to prevent unnecessary re-renders
+  const stableAircraft = useMemo(() => {
+    // Create a stable reference based on icao24 keys
+    return aircraft.filter(p => p.latitude != null && p.longitude != null);
+  }, [aircraft]);
+
   if (!showAircraft) return null;
 
   return (
     <>
-      {aircraft.map((plane) => (
+      {stableAircraft.map((plane) => (
         <Marker
           key={plane.icao24}
           longitude={plane.longitude!}
