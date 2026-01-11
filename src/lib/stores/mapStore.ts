@@ -15,8 +15,8 @@ interface MapStore {
 export const useMapStore = create<MapStore>((set) => ({
   viewState: {
     longitude: 0,
-    latitude: 20,
-    zoom: 1.3,
+    latitude: 30,
+    zoom: 2,
   },
   setViewState: (viewState) => set({ viewState }),
   flyTo: (longitude, latitude, zoom = 8) =>
