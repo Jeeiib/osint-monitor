@@ -1,0 +1,1 @@
+export { fetchEarthquakes } from "./usgs";
