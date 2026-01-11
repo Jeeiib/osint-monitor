@@ -37,6 +37,7 @@ export function BaseMap({ className }: BaseMapProps) {
         onMove={onMove}
         mapboxAccessToken={MAPBOX_TOKEN}
         mapStyle="mapbox://styles/mapbox/dark-v11"
+        projection={{ name: "naturalEarth" }}
         style={{ width: "100%", height: "100%" }}
       >
         <NavigationControl position="bottom-right" />
