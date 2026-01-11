@@ -1,2 +1,2 @@
 export { fetchEarthquakes } from "./usgs";
-export { fetchMilitaryAircraft, fetchAircraftByPoint } from "./airplaneslive";
+export { fetchMilitaryAircraft, fetchAircraftByPoint, fetchAllAircraft } from "./airplaneslive";

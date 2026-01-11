@@ -3,6 +3,7 @@ export interface Aircraft {
   callsign: string | null;  // Flight callsign (e.g., "AFR123")
   registration: string | null; // Aircraft registration
   aircraftType: string | null; // ICAO type code (e.g., "B738")
+  originCountry: string | null; // Derived from ICAO hex prefix
   longitude: number | null;
   latitude: number | null;
   altitude: number | null;  // meters (barometric)

@@ -6,7 +6,7 @@ interface AircraftStore {
   isLoading: boolean;
   error: string | null;
   lastUpdate: Date | null;
-  fetchAircraft: () => Promise<void>;
+  fetchAircraft: (centerLat?: number, centerLon?: number) => Promise<void>;
 }
 
 export const useAircraftStore = create<AircraftStore>((set) => ({
@@ -15,10 +15,14 @@ export const useAircraftStore = create<AircraftStore>((set) => ({
   error: null,
   lastUpdate: null,
 
-  fetchAircraft: async () => {
+  fetchAircraft: async (centerLat?: number, centerLon?: number) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch("/api/aircraft");
+      let url = "/api/aircraft";
+      if (centerLat !== undefined && centerLon !== undefined) {
+        url += `?lat=${centerLat}&lon=${centerLon}`;
+      }
+      const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
       set({ aircraft: data, isLoading: false, lastUpdate: new Date() });

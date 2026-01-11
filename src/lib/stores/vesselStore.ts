@@ -8,7 +8,7 @@ interface VesselStore {
   vessels: Map<number, Vessel>;
   isConnected: boolean;
   error: string | null;
-  connect: () => void;
+  connect: (centerLat?: number, centerLon?: number) => void;
   disconnect: () => void;
 }
 
@@ -19,22 +19,36 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
   isConnected: false,
   error: null,
 
-  connect: () => {
+  connect: (centerLat = 48.8566, centerLon = 2.3522) => {
     if (ws?.readyState === WebSocket.OPEN) return;
     if (!API_KEY) {
+      console.error("AISStream: API key missing");
       set({ error: "API key missing" });
       return;
     }
 
+    console.log("AISStream: Connecting...");
     ws = new WebSocket(AISSTREAM_URL);
 
     ws.onopen = () => {
-      // Subscribe to global data (bounding box covering the world)
+      console.log("AISStream: Connected, sending subscription...");
+
+      // Subscribe to a 500nm radius around center (roughly 10 degrees)
+      const latOffset = 5;
+      const lonOffset = 5;
+
       const subscriptionMessage = {
         APIKey: API_KEY,
-        BoundingBoxes: [[[-90, -180], [90, 180]]], // Whole world
+        BoundingBoxes: [
+          [
+            [centerLat - latOffset, centerLon - lonOffset],
+            [centerLat + latOffset, centerLon + lonOffset]
+          ]
+        ],
         FilterMessageTypes: ["PositionReport"],
       };
+
+      console.log("AISStream: Subscription message:", JSON.stringify(subscriptionMessage));
       ws?.send(JSON.stringify(subscriptionMessage));
       set({ isConnected: true, error: null });
     };
@@ -64,7 +78,7 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
             const newVessels = new Map(state.vessels);
             newVessels.set(vessel.mmsi, vessel);
 
-            // Keep only vessels updated in last 5 minutes (avoid memory bloat)
+            // Keep only vessels updated in last 5 minutes
             const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
             for (const [mmsi, v] of newVessels) {
               if (v.lastUpdate < fiveMinutesAgo) {
@@ -76,27 +90,31 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
           });
         }
       } catch (e) {
-        console.error("Failed to parse AIS message:", e);
+        console.error("AISStream: Failed to parse message:", e);
       }
     };
 
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      console.error("AISStream: WebSocket error:", error);
       set({ error: "WebSocket connection error", isConnected: false });
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
+      console.log("AISStream: Connection closed", event.code, event.reason);
       set({ isConnected: false });
-      // Reconnect after 5 seconds
+
+      // Reconnect after 5 seconds if not manually disconnected
       setTimeout(() => {
-        if (get().isConnected === false) {
-          get().connect();
+        if (get().isConnected === false && ws === null) {
+          console.log("AISStream: Reconnecting...");
+          get().connect(centerLat, centerLon);
         }
       }, 5000);
     };
   },
 
   disconnect: () => {
+    console.log("AISStream: Disconnecting...");
     if (ws) {
       ws.close();
       ws = null;

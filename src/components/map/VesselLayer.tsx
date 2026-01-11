@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { Marker, Popup } from "react-map-gl/mapbox";
-import { useVesselStore, useFilterStore } from "@/lib/stores";
+import { useVesselStore, useFilterStore, useMapStore } from "@/lib/stores";
 import type { Vessel } from "@/types/vessel";
 
 const VESSEL_COLOR = "#06b6d4"; // cyan-500
 
 function getVesselSize(speed: number | null): number {
-  // Size based on speed: faster = bigger
   if (!speed || speed < 1) return 10;
   if (speed > 15) return 18;
   if (speed > 8) return 14;
@@ -21,18 +20,19 @@ function formatSpeed(knots: number | null): string {
 }
 
 export function VesselLayer() {
-  const { vessels, connect, disconnect, isConnected } = useVesselStore();
+  const { vessels, connect, disconnect, isConnected, error } = useVesselStore();
   const { showVessels } = useFilterStore();
+  const { viewState } = useMapStore();
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
 
   useEffect(() => {
     if (showVessels) {
-      connect();
+      connect(viewState.latitude, viewState.longitude);
     } else {
       disconnect();
     }
     return () => disconnect();
-  }, [showVessels, connect, disconnect]);
+  }, [showVessels, connect, disconnect, viewState.latitude, viewState.longitude]);
 
   const vesselArray = useMemo(() => Array.from(vessels.values()), [vessels]);
 
@@ -89,9 +89,9 @@ export function VesselLayer() {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
               <div>Vitesse: {formatSpeed(selectedVessel.speedOverGround)}</div>
-              <div>Cap: {selectedVessel.heading ? `${Math.round(selectedVessel.heading)}deg` : "N/A"}</div>
+              <div>Cap: {selectedVessel.heading ? `${Math.round(selectedVessel.heading)}°` : "N/A"}</div>
               <div>MMSI: {selectedVessel.mmsi}</div>
-              <div>COG: {selectedVessel.courseOverGround ? `${Math.round(selectedVessel.courseOverGround)}deg` : "N/A"}</div>
+              <div>COG: {selectedVessel.courseOverGround ? `${Math.round(selectedVessel.courseOverGround)}°` : "N/A"}</div>
             </div>
             {selectedVessel.destination && (
               <p className="text-xs text-slate-400 mt-2">
@@ -103,14 +103,16 @@ export function VesselLayer() {
       )}
 
       {/* Connection status indicator */}
-      {showVessels && (
-        <div className="absolute bottom-20 left-4 z-10 text-xs">
-          <span className={`flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/80 backdrop-blur ${isConnected ? "text-cyan-400" : "text-slate-500"}`}>
-            <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-cyan-400 animate-pulse" : "bg-slate-500"}`} />
-            {isConnected ? `${vesselArray.length} bateaux` : "Connexion..."}
-          </span>
-        </div>
-      )}
+      <div className="absolute bottom-20 left-4 z-10 text-xs">
+        <span className={`flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/80 backdrop-blur ${
+          error ? "text-red-400" : isConnected ? "text-cyan-400" : "text-slate-500"
+        }`}>
+          <span className={`w-2 h-2 rounded-full ${
+            error ? "bg-red-400" : isConnected ? "bg-cyan-400 animate-pulse" : "bg-slate-500"
+          }`} />
+          {error ? "Erreur" : isConnected ? `${vesselArray.length} bateaux` : "Connexion..."}
+        </span>
+      </div>
     </>
   );
 }
