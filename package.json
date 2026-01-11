@@ -25,7 +25,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-map-gl": "^8.1.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@types/mapbox-gl": "^3.4.1",
