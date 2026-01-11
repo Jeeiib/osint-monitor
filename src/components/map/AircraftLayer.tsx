@@ -1,0 +1,113 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Marker, Popup } from "react-map-gl/mapbox";
+import { useAircraftStore, useFilterStore } from "@/lib/stores";
+import type { Aircraft } from "@/types/aircraft";
+
+const AIRCRAFT_COLOR = "#3b82f6"; // blue-500
+
+function getAircraftSize(altitude: number | null): number {
+  // Size based on altitude: higher = bigger (more visible)
+  if (!altitude) return 12;
+  if (altitude > 10000) return 16;
+  if (altitude > 5000) return 14;
+  return 12;
+}
+
+function formatAltitude(meters: number | null): string {
+  if (!meters) return "N/A";
+  const feet = Math.round(meters * 3.28084);
+  return `${feet.toLocaleString()} ft`;
+}
+
+function formatSpeed(ms: number | null): string {
+  if (!ms) return "N/A";
+  const knots = Math.round(ms * 1.94384);
+  return `${knots} kts`;
+}
+
+export function AircraftLayer() {
+  const { aircraft, fetchAircraft } = useAircraftStore();
+  const { showAircraft } = useFilterStore();
+  const [selectedAircraft, setSelectedAircraft] = useState<Aircraft | null>(
+    null
+  );
+
+  useEffect(() => {
+    fetchAircraft();
+    const interval = setInterval(fetchAircraft, 15000); // Refresh every 15 seconds
+    return () => clearInterval(interval);
+  }, [fetchAircraft]);
+
+  if (!showAircraft) return null;
+
+  return (
+    <>
+      {aircraft.map((plane) => (
+        <Marker
+          key={plane.icao24}
+          longitude={plane.longitude!}
+          latitude={plane.latitude!}
+          anchor="center"
+          rotation={plane.heading || 0}
+          onClick={(e) => {
+            e.originalEvent.stopPropagation();
+            setSelectedAircraft(plane);
+          }}
+        >
+          <div
+            className="cursor-pointer transition-transform hover:scale-125"
+            style={{
+              width: getAircraftSize(plane.altitude),
+              height: getAircraftSize(plane.altitude),
+              color: AIRCRAFT_COLOR,
+              filter: `drop-shadow(0 0 3px ${AIRCRAFT_COLOR})`,
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+            </svg>
+          </div>
+        </Marker>
+      ))}
+
+      {selectedAircraft && (
+        <Popup
+          longitude={selectedAircraft.longitude!}
+          latitude={selectedAircraft.latitude!}
+          anchor="bottom"
+          onClose={() => setSelectedAircraft(null)}
+          closeButton={true}
+          closeOnClick={false}
+        >
+          <div className="min-w-52 rounded-lg bg-slate-900 p-3 text-slate-100">
+            <div className="mb-2 flex items-center gap-2">
+              <span
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: AIRCRAFT_COLOR }}
+              />
+              <span className="text-lg font-bold">
+                {selectedAircraft.callsign || selectedAircraft.icao24}
+              </span>
+            </div>
+            <p className="mb-1 text-sm text-slate-300">
+              {selectedAircraft.originCountry}
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+              <div>Altitude: {formatAltitude(selectedAircraft.altitude)}</div>
+              <div>Vitesse: {formatSpeed(selectedAircraft.velocity)}</div>
+              <div>
+                Cap:{" "}
+                {selectedAircraft.heading
+                  ? `${Math.round(selectedAircraft.heading)}deg`
+                  : "N/A"}
+              </div>
+              <div>ICAO: {selectedAircraft.icao24}</div>
+            </div>
+          </div>
+        </Popup>
+      )}
+    </>
+  );
+}

@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import Map, { NavigationControl } from "react-map-gl/mapbox";
 import { useMapStore } from "@/lib/stores";
 import { EarthquakeLayer } from "./EarthquakeLayer";
+import { AircraftLayer } from "./AircraftLayer";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -42,6 +43,7 @@ export function BaseMap({ className }: BaseMapProps) {
       >
         <NavigationControl position="bottom-right" />
         <EarthquakeLayer />
+        <AircraftLayer />
       </Map>
     </div>
   );
