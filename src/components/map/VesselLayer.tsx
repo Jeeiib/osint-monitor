@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Marker, Popup } from "react-map-gl/mapbox";
 import { useVesselStore, useFilterStore, useMapStore } from "@/lib/stores";
 import type { Vessel } from "@/types/vessel";
@@ -19,20 +19,37 @@ function formatSpeed(knots: number | null): string {
   return `${knots.toFixed(1)} kts`;
 }
 
+function getPopupAnchor(
+  vesselLat: number,
+  mapCenterLat: number
+): "top" | "bottom" {
+  return vesselLat > mapCenterLat ? "top" : "bottom";
+}
+
 export function VesselLayer() {
   const { vessels, connect, disconnect, isConnected, error } = useVesselStore();
   const { showVessels } = useFilterStore();
   const { viewState } = useMapStore();
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
+  const hasConnected = useRef(false);
 
+  // Connect only once when showVessels becomes true
   useEffect(() => {
-    if (showVessels) {
-      connect(viewState.latitude, viewState.longitude);
-    } else {
+    if (showVessels && !hasConnected.current) {
+      hasConnected.current = true;
+      connect();
+    } else if (!showVessels && hasConnected.current) {
+      hasConnected.current = false;
       disconnect();
     }
-    return () => disconnect();
-  }, [showVessels, connect, disconnect, viewState.latitude, viewState.longitude]);
+
+    return () => {
+      if (hasConnected.current) {
+        disconnect();
+        hasConnected.current = false;
+      }
+    };
+  }, [showVessels, connect, disconnect]);
 
   const vesselArray = useMemo(() => Array.from(vessels.values()), [vessels]);
 
@@ -72,10 +89,10 @@ export function VesselLayer() {
         <Popup
           longitude={selectedVessel.longitude}
           latitude={selectedVessel.latitude}
-          anchor="bottom"
+          anchor={getPopupAnchor(selectedVessel.latitude, viewState.latitude)}
           onClose={() => setSelectedVessel(null)}
           closeButton={true}
-          closeOnClick={false}
+          closeOnClick={true}
         >
           <div className="p-3 min-w-52 bg-slate-900 text-slate-100 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
@@ -110,7 +127,7 @@ export function VesselLayer() {
           <span className={`w-2 h-2 rounded-full ${
             error ? "bg-red-400" : isConnected ? "bg-cyan-400 animate-pulse" : "bg-slate-500"
           }`} />
-          {error ? "Erreur" : isConnected ? `${vesselArray.length} bateaux` : "Connexion..."}
+          {error ? "Erreur AIS" : isConnected ? `${vesselArray.length} bateaux` : "Connexion..."}
         </span>
       </div>
     </>

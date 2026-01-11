@@ -24,6 +24,15 @@ function formatSpeed(ms: number | null): string {
   return `${Math.round(ms)} m/s`;
 }
 
+// Determine popup anchor based on aircraft position relative to map center
+function getPopupAnchor(
+  aircraftLat: number,
+  mapCenterLat: number
+): "top" | "bottom" {
+  // If aircraft is in upper half of view, show popup below (anchor top)
+  return aircraftLat > mapCenterLat ? "top" : "bottom";
+}
+
 export function AircraftLayer() {
   const { aircraft, fetchAircraft } = useAircraftStore();
   const { showAircraft } = useFilterStore();
@@ -38,7 +47,6 @@ export function AircraftLayer() {
 
   useEffect(() => {
     fetchWithCenter();
-    // Refresh every 10s (allows 2 API calls per refresh cycle with rate limit)
     const interval = setInterval(fetchWithCenter, 10000);
     return () => clearInterval(interval);
   }, [fetchWithCenter]);
@@ -110,10 +118,10 @@ export function AircraftLayer() {
         <Popup
           longitude={selectedAircraft.longitude!}
           latitude={selectedAircraft.latitude!}
-          anchor="bottom"
+          anchor={getPopupAnchor(selectedAircraft.latitude!, viewState.latitude)}
           onClose={() => setSelectedAircraft(null)}
           closeButton={true}
-          closeOnClick={false}
+          closeOnClick={true}
           maxWidth="320px"
         >
           <div className="min-w-64 rounded-lg bg-slate-900 p-3 text-slate-100">
