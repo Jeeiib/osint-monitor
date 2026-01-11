@@ -26,11 +26,11 @@ export async function fetchConflicts(): Promise<Conflict[]> {
       SOURCEURL as sourceUrl
     FROM \`gdelt-bq.gdeltv2.events\`
     WHERE SQLDATE >= ${dateFilter}
-      AND GoldsteinScale < -3
+      AND GoldsteinScale < -5
       AND ActionGeo_Lat IS NOT NULL
-      AND NumMentions >= 3
+      AND NumMentions >= 10
     ORDER BY NumMentions DESC
-    LIMIT 500
+    LIMIT 200
   `;
 
   try {
