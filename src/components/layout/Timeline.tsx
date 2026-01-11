@@ -10,7 +10,7 @@ export function Timeline() {
         {/* Raccourcis temporels */}
         <div className="flex gap-1">
           <Button variant="ghost" size="sm" className="text-xs h-7 px-2">
-            Aujourd'hui
+            Aujourd&apos;hui
           </Button>
           <Button variant="ghost" size="sm" className="text-xs h-7 px-2">
             24h

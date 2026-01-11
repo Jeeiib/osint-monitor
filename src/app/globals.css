@@ -67,3 +67,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mapbox popup styling for dark theme */
+.mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.mapboxgl-popup-close-button {
+  color: rgb(148 163 184) !important;
+  font-size: 20px !important;
+  padding: 4px 8px !important;
+  right: 4px !important;
+  top: 4px !important;
+}
+
+.mapboxgl-popup-close-button:hover {
+  color: white !important;
+  background: transparent !important;
+}
+
+.mapboxgl-popup-tip {
+  display: none !important;
+}

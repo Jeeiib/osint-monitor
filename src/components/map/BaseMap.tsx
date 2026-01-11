@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Map, { NavigationControl } from "react-map-gl";
+import { useCallback } from "react";
+import Map, { NavigationControl } from "react-map-gl/mapbox";
+import { useMapStore } from "@/lib/stores";
+import { EarthquakeLayer } from "./EarthquakeLayer";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -11,11 +13,14 @@ interface BaseMapProps {
 }
 
 export function BaseMap({ className }: BaseMapProps) {
-  const [viewState, setViewState] = useState({
-    longitude: 0,
-    latitude: 30,
-    zoom: 2,
-  });
+  const { viewState, setViewState } = useMapStore();
+
+  const onMove = useCallback(
+    (evt: { viewState: { longitude: number; latitude: number; zoom: number } }) => {
+      setViewState(evt.viewState);
+    },
+    [setViewState]
+  );
 
   if (!MAPBOX_TOKEN) {
     return (
@@ -26,15 +31,17 @@ export function BaseMap({ className }: BaseMapProps) {
   }
 
   return (
-    <Map
-      {...viewState}
-      onMove={(evt) => setViewState(evt.viewState)}
-      mapboxAccessToken={MAPBOX_TOKEN}
-      mapStyle="mapbox://styles/mapbox/dark-v11"
-      className={className}
-      style={{ width: "100%", height: "100%" }}
-    >
-      <NavigationControl position="bottom-right" />
-    </Map>
+    <div className={className}>
+      <Map
+        {...viewState}
+        onMove={onMove}
+        mapboxAccessToken={MAPBOX_TOKEN}
+        mapStyle="mapbox://styles/mapbox/dark-v11"
+        style={{ width: "100%", height: "100%" }}
+      >
+        <NavigationControl position="bottom-right" />
+        <EarthquakeLayer />
+      </Map>
+    </div>
   );
 }
