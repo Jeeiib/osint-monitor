@@ -30,7 +30,7 @@ export const useFilterStore = create<FilterStore>((set) => ({
   showAircraft: true,
   showVessels: true,
   showWeather: true,
-  importanceThreshold: 0,
+  importanceThreshold: 100, // Par défaut: M4+ uniquement (événements majeurs)
   timeRange: "live",
 
   toggleCategory: (category) =>

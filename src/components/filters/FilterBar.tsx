@@ -18,7 +18,7 @@ const categories: Category[] = [
   { key: "showConflicts", label: "Conflits", color: "red", Icon: Crosshair },
   { key: "showAircraft", label: "Avions", color: "blue", Icon: Plane },
   { key: "showVessels", label: "Bateaux", color: "cyan", Icon: Ship },
-  { key: "showWeather", label: "Météo", color: "green", Icon: Cloud },
+  { key: "showWeather", label: "Météo", color: "purple", Icon: Cloud },
 ];
 
 const colorClasses: Record<string, string> = {
@@ -26,7 +26,7 @@ const colorClasses: Record<string, string> = {
   red: "ring-red-500 data-[active=true]:bg-red-500/20",
   blue: "ring-blue-500 data-[active=true]:bg-blue-500/20",
   cyan: "ring-cyan-500 data-[active=true]:bg-cyan-500/20",
-  green: "ring-green-500 data-[active=true]:bg-green-500/20",
+  purple: "ring-purple-500 data-[active=true]:bg-purple-500/20",
 };
 
 const iconColorClasses: Record<string, string> = {
@@ -34,7 +34,7 @@ const iconColorClasses: Record<string, string> = {
   red: "text-red-500",
   blue: "text-blue-500",
   cyan: "text-cyan-500",
-  green: "text-green-500",
+  purple: "text-purple-500",
 };
 
 export function FilterBar() {
