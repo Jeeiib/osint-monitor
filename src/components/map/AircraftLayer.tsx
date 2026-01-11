@@ -17,14 +17,12 @@ function getAircraftSize(altitude: number | null): number {
 
 function formatAltitude(meters: number | null): string {
   if (!meters) return "N/A";
-  const feet = Math.round(meters * 3.28084);
-  return `${feet.toLocaleString()} ft`;
+  return `${Math.round(meters).toLocaleString()} m`;
 }
 
 function formatSpeed(ms: number | null): string {
   if (!ms) return "N/A";
-  const knots = Math.round(ms * 1.94384);
-  return `${knots} kts`;
+  return `${Math.round(ms)} m/s`;
 }
 
 export function AircraftLayer() {
@@ -36,9 +34,8 @@ export function AircraftLayer() {
 
   useEffect(() => {
     fetchAircraft();
-    // Refresh every 21.6s = exactly 4000 requests/day (OpenSky free limit)
-    // 86400s/day ÷ 4000 req = 21.6s per request
-    const interval = setInterval(fetchAircraft, 21600);
+    // Airplanes.live: 1 req/sec allowed, refresh every 5s for balance
+    const interval = setInterval(fetchAircraft, 5000);
     return () => clearInterval(interval);
   }, [fetchAircraft]);
 
@@ -92,20 +89,31 @@ export function AircraftLayer() {
               <span className="text-lg font-bold">
                 {selectedAircraft.callsign || selectedAircraft.icao24}
               </span>
+              {selectedAircraft.isMilitary && (
+                <span className="rounded bg-blue-600 px-1.5 py-0.5 text-xs font-medium">
+                  MIL
+                </span>
+              )}
             </div>
-            <p className="mb-1 text-sm text-slate-300">
-              {selectedAircraft.originCountry}
-            </p>
+            {selectedAircraft.aircraftType && (
+              <p className="mb-1 text-sm text-slate-300">
+                {selectedAircraft.aircraftType}
+                {selectedAircraft.registration && ` (${selectedAircraft.registration})`}
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
               <div>Altitude: {formatAltitude(selectedAircraft.altitude)}</div>
               <div>Vitesse: {formatSpeed(selectedAircraft.velocity)}</div>
               <div>
                 Cap:{" "}
                 {selectedAircraft.heading
-                  ? `${Math.round(selectedAircraft.heading)}deg`
+                  ? `${Math.round(selectedAircraft.heading)}°`
                   : "N/A"}
               </div>
-              <div>ICAO: {selectedAircraft.icao24}</div>
+              <div>ICAO: {selectedAircraft.icao24.toUpperCase()}</div>
+              {selectedAircraft.squawk && (
+                <div>Squawk: {selectedAircraft.squawk}</div>
+              )}
             </div>
           </div>
         </Popup>
