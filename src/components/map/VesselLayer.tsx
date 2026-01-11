@@ -1,0 +1,116 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import { Marker, Popup } from "react-map-gl/mapbox";
+import { useVesselStore, useFilterStore } from "@/lib/stores";
+import type { Vessel } from "@/types/vessel";
+
+const VESSEL_COLOR = "#06b6d4"; // cyan-500
+
+function getVesselSize(speed: number | null): number {
+  // Size based on speed: faster = bigger
+  if (!speed || speed < 1) return 10;
+  if (speed > 15) return 18;
+  if (speed > 8) return 14;
+  return 12;
+}
+
+function formatSpeed(knots: number | null): string {
+  if (!knots) return "0 kts";
+  return `${knots.toFixed(1)} kts`;
+}
+
+export function VesselLayer() {
+  const { vessels, connect, disconnect, isConnected } = useVesselStore();
+  const { showVessels } = useFilterStore();
+  const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
+
+  useEffect(() => {
+    if (showVessels) {
+      connect();
+    } else {
+      disconnect();
+    }
+    return () => disconnect();
+  }, [showVessels, connect, disconnect]);
+
+  const vesselArray = useMemo(() => Array.from(vessels.values()), [vessels]);
+
+  if (!showVessels) return null;
+
+  return (
+    <>
+      {vesselArray.map((vessel) => (
+        <Marker
+          key={vessel.mmsi}
+          longitude={vessel.longitude}
+          latitude={vessel.latitude}
+          anchor="center"
+          rotation={vessel.heading || vessel.courseOverGround || 0}
+          onClick={(e) => {
+            e.originalEvent.stopPropagation();
+            setSelectedVessel(vessel);
+          }}
+        >
+          <div
+            className="cursor-pointer transition-transform hover:scale-125"
+            style={{
+              width: getVesselSize(vessel.speedOverGround),
+              height: getVesselSize(vessel.speedOverGround),
+              color: VESSEL_COLOR,
+              filter: `drop-shadow(0 0 3px ${VESSEL_COLOR})`,
+            }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/>
+            </svg>
+          </div>
+        </Marker>
+      ))}
+
+      {selectedVessel && (
+        <Popup
+          longitude={selectedVessel.longitude}
+          latitude={selectedVessel.latitude}
+          anchor="bottom"
+          onClose={() => setSelectedVessel(null)}
+          closeButton={true}
+          closeOnClick={false}
+        >
+          <div className="p-3 min-w-52 bg-slate-900 text-slate-100 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: VESSEL_COLOR }}
+              />
+              <span className="font-bold text-lg">
+                {selectedVessel.name || `MMSI: ${selectedVessel.mmsi}`}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+              <div>Vitesse: {formatSpeed(selectedVessel.speedOverGround)}</div>
+              <div>Cap: {selectedVessel.heading ? `${Math.round(selectedVessel.heading)}deg` : "N/A"}</div>
+              <div>MMSI: {selectedVessel.mmsi}</div>
+              <div>COG: {selectedVessel.courseOverGround ? `${Math.round(selectedVessel.courseOverGround)}deg` : "N/A"}</div>
+            </div>
+            {selectedVessel.destination && (
+              <p className="text-xs text-slate-400 mt-2">
+                Destination: {selectedVessel.destination}
+              </p>
+            )}
+          </div>
+        </Popup>
+      )}
+
+      {/* Connection status indicator */}
+      {showVessels && (
+        <div className="absolute bottom-20 left-4 z-10 text-xs">
+          <span className={`flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/80 backdrop-blur ${isConnected ? "text-cyan-400" : "text-slate-500"}`}>
+            <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-cyan-400 animate-pulse" : "bg-slate-500"}`} />
+            {isConnected ? `${vesselArray.length} bateaux` : "Connexion..."}
+          </span>
+        </div>
+      )}
+    </>
+  );
+}
