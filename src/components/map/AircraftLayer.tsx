@@ -36,7 +36,9 @@ export function AircraftLayer() {
 
   useEffect(() => {
     fetchAircraft();
-    const interval = setInterval(fetchAircraft, 15000); // Refresh every 15 seconds
+    // Refresh every 30 seconds to stay under OpenSky's 4000 requests/day limit
+    // 30s = 2 req/min = 2880 req/day
+    const interval = setInterval(fetchAircraft, 30000);
     return () => clearInterval(interval);
   }, [fetchAircraft]);
 
