@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
-import Map, { NavigationControl } from "react-map-gl/mapbox";
+import { useCallback, useRef, useEffect, useState } from "react";
+import Map, { NavigationControl, type MapRef } from "react-map-gl/mapbox";
 import { useMapStore } from "@/lib/stores";
 import { EarthquakeLayer } from "./EarthquakeLayer";
 import { AircraftLayer } from "./AircraftLayer";
-import { VesselLayer } from "./VesselLayer";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -16,6 +15,9 @@ interface BaseMapProps {
 
 export function BaseMap({ className }: BaseMapProps) {
   const { viewState, setViewState } = useMapStore();
+  const mapRef = useRef<MapRef>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   const onMove = useCallback(
     (evt: { viewState: { longitude: number; latitude: number; zoom: number } }) => {
@@ -23,6 +25,21 @@ export function BaseMap({ className }: BaseMapProps) {
     },
     [setViewState]
   );
+
+  // Resize map when container size changes
+  useEffect(() => {
+    if (!containerRef.current || !isMapLoaded) return;
+
+    const observer = new ResizeObserver(() => {
+      // Trigger map resize after a short delay to let CSS finish
+      requestAnimationFrame(() => {
+        mapRef.current?.resize();
+      });
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [isMapLoaded]);
 
   if (!MAPBOX_TOKEN) {
     return (
@@ -33,10 +50,12 @@ export function BaseMap({ className }: BaseMapProps) {
   }
 
   return (
-    <div className={className}>
+    <div ref={containerRef} className={className}>
       <Map
+        ref={mapRef}
         {...viewState}
         onMove={onMove}
+        onLoad={() => setIsMapLoaded(true)}
         mapboxAccessToken={MAPBOX_TOKEN}
         mapStyle="mapbox://styles/mapbox/dark-v11"
         projection={{ name: "mercator" }}
@@ -45,7 +64,6 @@ export function BaseMap({ className }: BaseMapProps) {
         <NavigationControl position="bottom-right" />
         <EarthquakeLayer />
         <AircraftLayer />
-        <VesselLayer />
       </Map>
     </div>
   );

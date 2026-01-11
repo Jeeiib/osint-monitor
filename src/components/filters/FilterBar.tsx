@@ -3,11 +3,11 @@
 import { useFilterStore } from "@/lib/stores";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Activity, Crosshair, Plane, Ship, Cloud } from "lucide-react";
+import { Activity, Crosshair, Plane, Cloud } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface Category {
-  key: "showEarthquakes" | "showConflicts" | "showAircraft" | "showVessels" | "showWeather";
+  key: "showEarthquakes" | "showConflicts" | "showAircraft" | "showWeather";
   label: string;
   color: string;
   Icon: LucideIcon;
@@ -17,7 +17,6 @@ const categories: Category[] = [
   { key: "showEarthquakes", label: "Séismes", color: "orange", Icon: Activity },
   { key: "showConflicts", label: "Conflits", color: "red", Icon: Crosshair },
   { key: "showAircraft", label: "Avions", color: "blue", Icon: Plane },
-  { key: "showVessels", label: "Bateaux", color: "cyan", Icon: Ship },
   { key: "showWeather", label: "Météo", color: "green", Icon: Cloud },
 ];
 
@@ -25,7 +24,6 @@ const colorClasses: Record<string, string> = {
   orange: "ring-orange-500 data-[active=true]:bg-orange-500/20",
   red: "ring-red-500 data-[active=true]:bg-red-500/20",
   blue: "ring-blue-500 data-[active=true]:bg-blue-500/20",
-  cyan: "ring-cyan-500 data-[active=true]:bg-cyan-500/20",
   green: "ring-green-500 data-[active=true]:bg-green-500/20",
 };
 
@@ -33,7 +31,6 @@ const iconColorClasses: Record<string, string> = {
   orange: "text-orange-500",
   red: "text-red-500",
   blue: "text-blue-500",
-  cyan: "text-cyan-500",
   green: "text-green-500",
 };
 

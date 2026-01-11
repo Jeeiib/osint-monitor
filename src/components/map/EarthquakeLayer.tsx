@@ -78,7 +78,7 @@ export function EarthquakeLayer() {
           anchor="bottom"
           onClose={() => setSelectedQuake(null)}
           closeButton={true}
-          closeOnClick={false}
+          closeOnClick={true}
         >
           <div className="p-3 min-w-52 bg-slate-900 text-slate-100 rounded-lg">
             <div className="flex items-center gap-2 mb-2">

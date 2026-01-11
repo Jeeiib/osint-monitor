@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Marker, Popup } from "react-map-gl/mapbox";
 import { useAircraftStore, useFilterStore, useMapStore } from "@/lib/stores";
 import type { Aircraft } from "@/types/aircraft";
 
 const AIRCRAFT_COLOR = "#3b82f6"; // blue-500
+const FETCH_INTERVAL = 10000; // 10 seconds
+const DEBOUNCE_DELAY = 2000; // 2 seconds debounce for position changes
 
 function getAircraftSize(altitude: number | null): number {
   if (!altitude) return 12;
@@ -41,15 +43,65 @@ export function AircraftLayer() {
   const [aircraftPhoto, setAircraftPhoto] = useState<string | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
 
-  const fetchWithCenter = useCallback(() => {
-    fetchAircraft(viewState.latitude, viewState.longitude);
+  // Track if a fetch is in progress to prevent race conditions
+  const fetchInProgress = useRef(false);
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastFetchPosition = useRef({ lat: 0, lon: 0 });
+
+  const fetchWithCenter = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (fetchInProgress.current) return;
+
+    fetchInProgress.current = true;
+    try {
+      await fetchAircraft(viewState.latitude, viewState.longitude);
+      lastFetchPosition.current = {
+        lat: viewState.latitude,
+        lon: viewState.longitude,
+      };
+    } finally {
+      fetchInProgress.current = false;
+    }
   }, [fetchAircraft, viewState.latitude, viewState.longitude]);
 
+  // Initial fetch and regular interval
   useEffect(() => {
+    // Initial fetch
     fetchWithCenter();
-    const interval = setInterval(fetchWithCenter, 10000);
+
+    // Regular interval - use stored position to avoid dependency issues
+    const interval = setInterval(() => {
+      if (!fetchInProgress.current) {
+        fetchAircraft(lastFetchPosition.current.lat, lastFetchPosition.current.lon);
+      }
+    }, FETCH_INTERVAL);
+
     return () => clearInterval(interval);
-  }, [fetchWithCenter]);
+  }, [fetchAircraft, fetchWithCenter]);
+
+  // Debounced fetch when position changes significantly
+  useEffect(() => {
+    const latDiff = Math.abs(viewState.latitude - lastFetchPosition.current.lat);
+    const lonDiff = Math.abs(viewState.longitude - lastFetchPosition.current.lon);
+
+    // Only refetch if moved more than ~50km
+    if (latDiff < 0.5 && lonDiff < 0.5) return;
+
+    // Debounce position-based fetches
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      fetchWithCenter();
+    }, DEBOUNCE_DELAY);
+
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+    };
+  }, [viewState.latitude, viewState.longitude, fetchWithCenter]);
 
   // Fetch photo when aircraft is selected
   useEffect(() => {

@@ -1,8 +1,7 @@
 import { create } from "zustand";
-import type { Vessel, AISStreamMessage } from "@/types/vessel";
+import type { Vessel } from "@/types/vessel";
 
-const AISSTREAM_URL = "wss://stream.aisstream.io/v0/stream";
-const API_KEY = process.env.NEXT_PUBLIC_AISSTREAM_API_KEY;
+const SSE_URL = "/api/vessels/stream";
 const MAX_RECONNECT_ATTEMPTS = 3;
 const RECONNECT_DELAY = 10000; // 10 seconds
 
@@ -14,9 +13,9 @@ interface VesselStore {
   disconnect: () => void;
 }
 
-let ws: WebSocket | null = null;
+let eventSource: EventSource | null = null;
 let reconnectAttempts = 0;
-let reconnectTimeout: NodeJS.Timeout | null = null;
+let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export const useVesselStore = create<VesselStore>((set, get) => ({
   vessels: new Map(),
@@ -25,13 +24,7 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
 
   connect: () => {
     // Prevent multiple connections
-    if (ws?.readyState === WebSocket.OPEN || ws?.readyState === WebSocket.CONNECTING) {
-      return;
-    }
-
-    if (!API_KEY) {
-      console.error("AISStream: API key missing");
-      set({ error: "Clé API manquante" });
+    if (eventSource?.readyState === EventSource.OPEN || eventSource?.readyState === EventSource.CONNECTING) {
       return;
     }
 
@@ -41,51 +34,54 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
       reconnectTimeout = null;
     }
 
-    console.log("AISStream: Connecting...");
+    console.log("AISStream SSE: Connecting...");
 
     try {
-      ws = new WebSocket(AISSTREAM_URL);
+      eventSource = new EventSource(SSE_URL);
     } catch (e) {
-      console.error("AISStream: Failed to create WebSocket:", e);
+      console.error("AISStream SSE: Failed to create EventSource:", e);
       set({ error: "Échec de connexion" });
       return;
     }
 
-    ws.onopen = () => {
-      console.log("AISStream: Connected, sending subscription...");
-      reconnectAttempts = 0; // Reset on successful connection
-
-      // Subscribe to Mediterranean + Atlantic (busy shipping areas)
-      const subscriptionMessage = {
-        APIKey: API_KEY,
-        BoundingBoxes: [
-          [[30, -20], [60, 40]], // Europe/Mediterranean/Atlantic
-        ],
-        FilterMessageTypes: ["PositionReport"],
-      };
-
-      console.log("AISStream: Subscription:", JSON.stringify(subscriptionMessage));
-      ws?.send(JSON.stringify(subscriptionMessage));
+    eventSource.onopen = () => {
+      console.log("AISStream SSE: Connected");
+      reconnectAttempts = 0;
       set({ isConnected: true, error: null });
     };
 
-    ws.onmessage = (event) => {
+    eventSource.onmessage = (event) => {
       try {
-        const data: AISStreamMessage = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
 
-        if (data.MessageType === "PositionReport" && data.Message.PositionReport) {
-          const pos = data.Message.PositionReport;
-          const meta = data.MetaData;
+        if (data.type === "connected") {
+          console.log("AISStream SSE: WebSocket backend connected");
+          return;
+        }
+
+        if (data.type === "error") {
+          console.error("AISStream SSE: Backend error:", data.message);
+          set({ error: data.message });
+          return;
+        }
+
+        if (data.type === "closed") {
+          console.log("AISStream SSE: Backend WebSocket closed:", data.code);
+          return;
+        }
+
+        if (data.type === "vessel" && data.vessel) {
+          const v = data.vessel;
 
           const vessel: Vessel = {
-            mmsi: meta.MMSI,
-            name: meta.ShipName || null,
+            mmsi: v.mmsi,
+            name: v.name || null,
             shipType: 0,
-            latitude: pos.Latitude,
-            longitude: pos.Longitude,
-            heading: pos.TrueHeading !== 511 ? pos.TrueHeading : null,
-            courseOverGround: pos.Cog,
-            speedOverGround: pos.Sog,
+            latitude: v.latitude,
+            longitude: v.longitude,
+            heading: v.heading,
+            courseOverGround: v.cog,
+            speedOverGround: v.sog,
             destination: null,
             lastUpdate: Date.now(),
           };
@@ -94,10 +90,10 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
             const newVessels = new Map(state.vessels);
             newVessels.set(vessel.mmsi, vessel);
 
-            // Keep only vessels updated in last 5 minutes
-            const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-            for (const [mmsi, v] of newVessels) {
-              if (v.lastUpdate < fiveMinutesAgo) {
+            // Keep only vessels updated in last 2 minutes
+            const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
+            for (const [mmsi, vv] of newVessels) {
+              if (vv.lastUpdate < twoMinutesAgo) {
                 newVessels.delete(mmsi);
               }
             }
@@ -106,37 +102,37 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
           });
         }
       } catch (e) {
-        console.error("AISStream: Failed to parse message:", e);
+        console.error("AISStream SSE: Failed to parse message:", e);
       }
     };
 
-    ws.onerror = () => {
-      console.error("AISStream: WebSocket error");
+    eventSource.onerror = () => {
+      console.error("AISStream SSE: Connection error");
       set({ error: "Erreur de connexion", isConnected: false });
-    };
 
-    ws.onclose = (event) => {
-      console.log("AISStream: Connection closed", event.code, event.reason);
-      ws = null;
-      set({ isConnected: false });
+      // Close and cleanup
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
 
-      // Only reconnect if we haven't exceeded max attempts
+      // Reconnect logic
       if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts++;
-        console.log(`AISStream: Reconnecting in ${RECONNECT_DELAY/1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+        console.log(`AISStream SSE: Reconnecting in ${RECONNECT_DELAY/1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
 
         reconnectTimeout = setTimeout(() => {
           get().connect();
         }, RECONNECT_DELAY);
       } else {
-        console.log("AISStream: Max reconnection attempts reached");
+        console.log("AISStream SSE: Max reconnection attempts reached");
         set({ error: "Connexion impossible" });
       }
     };
   },
 
   disconnect: () => {
-    console.log("AISStream: Disconnecting...");
+    console.log("AISStream SSE: Disconnecting...");
 
     // Clear reconnect timeout
     if (reconnectTimeout) {
@@ -147,9 +143,9 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
     // Reset reconnect attempts
     reconnectAttempts = MAX_RECONNECT_ATTEMPTS; // Prevent auto-reconnect
 
-    if (ws) {
-      ws.close();
-      ws = null;
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
     }
 
     set({ isConnected: false, vessels: new Map() });

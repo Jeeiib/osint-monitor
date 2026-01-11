@@ -119,6 +119,19 @@ export async function fetchAircraftByPoint(
     .filter((a): a is Aircraft => a !== null && !a.onGround);
 }
 
+// Track last fetch time to respect rate limits
+let lastFetchTime = 0;
+const MIN_FETCH_INTERVAL = 1500; // 1.5 seconds between API calls
+
+async function waitForRateLimit(): Promise<void> {
+  const now = Date.now();
+  const elapsed = now - lastFetchTime;
+  if (elapsed < MIN_FETCH_INTERVAL) {
+    await new Promise(r => setTimeout(r, MIN_FETCH_INTERVAL - elapsed));
+  }
+  lastFetchTime = Date.now();
+}
+
 export async function fetchAllAircraft(
   centerLat?: number,
   centerLon?: number
@@ -128,6 +141,7 @@ export async function fetchAllAircraft(
 
   // Always fetch military aircraft globally
   try {
+    await waitForRateLimit();
     const military = await fetchMilitaryAircraft();
     for (const ac of military) {
       if (!seen.has(ac.icao24)) {
@@ -141,9 +155,8 @@ export async function fetchAllAircraft(
 
   // If we have a center point, also fetch local aircraft
   if (centerLat !== undefined && centerLon !== undefined) {
-    // Wait a bit to respect rate limit
-    await new Promise(r => setTimeout(r, 1100));
     try {
+      await waitForRateLimit();
       const local = await fetchAircraftByPoint(centerLat, centerLon, 250);
       for (const ac of local) {
         if (!seen.has(ac.icao24)) {
