@@ -5,15 +5,13 @@ import { Marker, Popup } from "react-map-gl/mapbox";
 import { useEarthquakeStore, useFilterStore } from "@/lib/stores";
 import type { Earthquake } from "@/types/earthquake";
 
-function getMagnitudeColor(magnitude: number): string {
-  if (magnitude >= 6) return "#ef4444"; // red-500
-  if (magnitude >= 5) return "#f97316"; // orange-500
-  if (magnitude >= 4) return "#eab308"; // yellow-500
-  return "#22c55e"; // green-500
-}
+// Couleur fixe pour les séismes (orange)
+const EARTHQUAKE_COLOR = "#f97316"; // orange-500
 
+// Taille basée sur la magnitude (plus gros = plus intense)
 function getMagnitudeSize(magnitude: number): number {
-  return Math.max(10, magnitude * 6);
+  // M4 = 16px, M5 = 24px, M6 = 32px, M7 = 40px, M8+ = 48px
+  return Math.min(48, Math.max(16, (magnitude - 3) * 8));
 }
 
 function formatTimeAgo(timestamp: number): string {
@@ -65,8 +63,8 @@ export function EarthquakeLayer() {
               style={{
                 width: getMagnitudeSize(earthquake.magnitude),
                 height: getMagnitudeSize(earthquake.magnitude),
-                backgroundColor: getMagnitudeColor(earthquake.magnitude),
-                boxShadow: `0 0 ${earthquake.magnitude * 3}px ${getMagnitudeColor(earthquake.magnitude)}`,
+                backgroundColor: EARTHQUAKE_COLOR,
+                boxShadow: `0 0 ${earthquake.magnitude * 2}px ${EARTHQUAKE_COLOR}`,
               }}
             />
           </Marker>
@@ -86,7 +84,7 @@ export function EarthquakeLayer() {
             <div className="flex items-center gap-2 mb-2">
               <span
                 className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: getMagnitudeColor(selectedQuake.magnitude) }}
+                style={{ backgroundColor: EARTHQUAKE_COLOR }}
               />
               <span className="font-bold text-lg">M{selectedQuake.magnitude.toFixed(1)}</span>
             </div>
