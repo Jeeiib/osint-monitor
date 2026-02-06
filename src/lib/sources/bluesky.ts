@@ -94,6 +94,8 @@ export async function fetchBlueskyFeed(account: BlueskyHandle): Promise<SocialPo
       const createdAt = (record.createdAt as string) ?? "";
       const uri = (post.uri as string) ?? "";
       const embed = post.embed as Record<string, unknown> | undefined;
+      const likeCount = (post.likeCount as number) ?? 0;
+      const repostCount = (post.repostCount as number) ?? 0;
 
       if (!text) continue;
 
@@ -107,6 +109,8 @@ export async function fetchBlueskyFeed(account: BlueskyHandle): Promise<SocialPo
         timestamp: new Date(createdAt),
         imageUrl: extractImageFromEmbed(embed),
         topic: detectTopic(text),
+        likeCount,
+        repostCount,
       });
     }
 

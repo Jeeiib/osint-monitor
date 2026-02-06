@@ -6,3 +6,4 @@ export { useVesselStore } from "./vesselStore";
 export { useEventsStore } from "./eventsStore";
 export { useSidebarStore } from "./sidebarStore";
 export { useSocialStore } from "./socialStore";
+export { useAlertStore } from "./alertStore";

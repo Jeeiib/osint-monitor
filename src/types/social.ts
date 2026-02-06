@@ -12,4 +12,6 @@ export interface SocialPost {
   timestamp: Date;
   imageUrl?: string;
   topic: SocialTopic;
+  likeCount?: number;
+  repostCount?: number;
 }
