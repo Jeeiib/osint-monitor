@@ -5,25 +5,11 @@ import { Marker, Popup } from "react-map-gl/mapbox";
 import { useVesselStore, useFilterStore, useMapStore } from "@/lib/stores";
 import type { Vessel } from "@/types/vessel";
 
-const VESSEL_COLOR = "#06b6d4"; // cyan-500
-
-function getVesselSize(speed: number | null): number {
-  if (!speed || speed < 1) return 10;
-  if (speed > 15) return 18;
-  if (speed > 8) return 14;
-  return 12;
-}
+const VESSEL_COLOR = "#06b6d4";
 
 function formatSpeed(knots: number | null): string {
   if (!knots) return "0 kts";
   return `${knots.toFixed(1)} kts`;
-}
-
-function getPopupAnchor(
-  vesselLat: number,
-  mapCenterLat: number
-): "top" | "bottom" {
-  return vesselLat > mapCenterLat ? "top" : "bottom";
 }
 
 export function VesselLayer() {
@@ -33,7 +19,6 @@ export function VesselLayer() {
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const hasConnected = useRef(false);
 
-  // Connect only once when showVessels becomes true
   useEffect(() => {
     if (showVessels && !hasConnected.current) {
       hasConnected.current = true;
@@ -72,8 +57,8 @@ export function VesselLayer() {
           <div
             className="cursor-pointer transition-transform hover:scale-125"
             style={{
-              width: getVesselSize(vessel.speedOverGround),
-              height: getVesselSize(vessel.speedOverGround),
+              width: 14,
+              height: 14,
               color: VESSEL_COLOR,
               filter: `drop-shadow(0 0 3px ${VESSEL_COLOR})`,
             }}
@@ -89,10 +74,11 @@ export function VesselLayer() {
         <Popup
           longitude={selectedVessel.longitude}
           latitude={selectedVessel.latitude}
-          anchor={getPopupAnchor(selectedVessel.latitude, viewState.latitude)}
+          anchor={selectedVessel.latitude > viewState.latitude ? "top" : "bottom"}
           onClose={() => setSelectedVessel(null)}
           closeButton={true}
           closeOnClick={true}
+          className="vessel-popup"
         >
           <div className="p-3 min-w-52 bg-slate-900 text-slate-100 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
@@ -105,31 +91,33 @@ export function VesselLayer() {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-              <div>Vitesse: {formatSpeed(selectedVessel.speedOverGround)}</div>
-              <div>Cap: {selectedVessel.heading ? `${Math.round(selectedVessel.heading)}°` : "N/A"}</div>
+              <div>Speed: {formatSpeed(selectedVessel.speedOverGround)}</div>
+              <div>Hdg: {selectedVessel.heading ? `${Math.round(selectedVessel.heading)}°` : "N/A"}</div>
               <div>MMSI: {selectedVessel.mmsi}</div>
               <div>COG: {selectedVessel.courseOverGround ? `${Math.round(selectedVessel.courseOverGround)}°` : "N/A"}</div>
             </div>
             {selectedVessel.destination && (
               <p className="text-xs text-slate-400 mt-2">
-                Destination: {selectedVessel.destination}
+                Dest: {selectedVessel.destination}
               </p>
             )}
           </div>
         </Popup>
       )}
 
-      {/* Connection status indicator */}
-      <div className="absolute bottom-20 left-4 z-10 text-xs">
-        <span className={`flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/80 backdrop-blur ${
-          error ? "text-red-400" : isConnected ? "text-cyan-400" : "text-slate-500"
-        }`}>
-          <span className={`w-2 h-2 rounded-full ${
-            error ? "bg-red-400" : isConnected ? "bg-cyan-400 animate-pulse" : "bg-slate-500"
-          }`} />
-          {error ? "Erreur AIS" : isConnected ? `${vesselArray.length} bateaux` : "Connexion..."}
-        </span>
-      </div>
+      {/* Connection status - hide when connected with 0 vessels */}
+      {showVessels && (error || !isConnected || vesselArray.length > 0) && (
+        <div className="absolute bottom-20 left-4 z-10 text-xs">
+          <span className={`flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/80 backdrop-blur ${
+            error ? "text-red-400" : isConnected ? "text-cyan-400" : "text-slate-500"
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              error ? "bg-red-400" : isConnected ? "bg-cyan-400 animate-pulse" : "bg-slate-500"
+            }`} />
+            {error ? "AIS Error" : isConnected ? `${vesselArray.length} vessels` : "Connecting..."}
+          </span>
+        </div>
+      )}
     </>
   );
 }

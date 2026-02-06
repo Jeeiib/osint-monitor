@@ -1,38 +1,48 @@
 "use client";
 
 import { useFilterStore } from "@/lib/stores";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Activity, Crosshair, Plane, Cloud } from "lucide-react";
+import { Crosshair, Plane, Ship, Activity } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface Category {
-  key: "showEarthquakes" | "showConflicts" | "showAircraft" | "showWeather";
+  key: "showEvents" | "showAircraft" | "showVessels" | "showEarthquakes";
   label: string;
   color: string;
+  activeClasses: string;
   Icon: LucideIcon;
 }
 
 const categories: Category[] = [
-  { key: "showEarthquakes", label: "Séismes", color: "orange", Icon: Activity },
-  { key: "showConflicts", label: "Conflits", color: "red", Icon: Crosshair },
-  { key: "showAircraft", label: "Avions", color: "blue", Icon: Plane },
-  { key: "showWeather", label: "Météo", color: "green", Icon: Cloud },
+  {
+    key: "showEvents",
+    label: "Geopolitics",
+    color: "red",
+    activeClasses: "border-red-500/40 bg-red-500/10 text-red-400",
+    Icon: Crosshair,
+  },
+  {
+    key: "showAircraft",
+    label: "Military Air",
+    color: "blue",
+    activeClasses: "border-blue-500/40 bg-blue-500/10 text-blue-400",
+    Icon: Plane,
+  },
+  {
+    key: "showVessels",
+    label: "Naval",
+    color: "cyan",
+    activeClasses: "border-cyan-500/40 bg-cyan-500/10 text-cyan-400",
+    Icon: Ship,
+  },
+  {
+    key: "showEarthquakes",
+    label: "Seismic",
+    color: "orange",
+    activeClasses: "border-orange-500/40 bg-orange-500/10 text-orange-400",
+    Icon: Activity,
+  },
 ];
-
-const colorClasses: Record<string, string> = {
-  orange: "ring-orange-500 data-[active=true]:bg-orange-500/20",
-  red: "ring-red-500 data-[active=true]:bg-red-500/20",
-  blue: "ring-blue-500 data-[active=true]:bg-blue-500/20",
-  green: "ring-green-500 data-[active=true]:bg-green-500/20",
-};
-
-const iconColorClasses: Record<string, string> = {
-  orange: "text-orange-500",
-  red: "text-red-500",
-  blue: "text-blue-500",
-  green: "text-green-500",
-};
 
 export function FilterBar() {
   const store = useFilterStore();
@@ -43,20 +53,19 @@ export function FilterBar() {
         const isActive = store[cat.key];
         const Icon = cat.Icon;
         return (
-          <Button
+          <button
             key={cat.key}
-            variant="outline"
-            size="sm"
-            data-active={isActive}
             onClick={() => store.toggleCategory(cat.key)}
             className={cn(
-              "bg-slate-900/80 backdrop-blur border-slate-700 hover:bg-slate-800 transition-all h-8",
-              isActive && `ring-2 ring-offset-2 ring-offset-slate-950 ${colorClasses[cat.color]}`
+              "flex h-7 items-center gap-1.5 rounded-full border px-3 text-xs font-medium backdrop-blur-md transition-all",
+              isActive
+                ? cat.activeClasses
+                : "border-white/5 bg-slate-900/70 text-slate-500 hover:border-white/10 hover:text-slate-400"
             )}
           >
-            <Icon className={cn("h-4 w-4 mr-1.5", isActive ? iconColorClasses[cat.color] : "text-slate-500")} />
-            <span className={cn("text-xs", !isActive && "text-slate-500")}>{cat.label}</span>
-          </Button>
+            <Icon className="h-3 w-3" />
+            {cat.label}
+          </button>
         );
       })}
     </div>

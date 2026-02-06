@@ -5,34 +5,19 @@ import { Marker, Popup } from "react-map-gl/mapbox";
 import { useAircraftStore, useFilterStore, useMapStore } from "@/lib/stores";
 import type { Aircraft } from "@/types/aircraft";
 
-const AIRCRAFT_COLOR = "#3b82f6"; // blue-500
-const FETCH_INTERVAL = 10000; // 10 seconds
-const DEBOUNCE_DELAY = 2000; // 2 seconds debounce for position changes
-
-function getAircraftSize(altitude: number | null): number {
-  if (!altitude) return 12;
-  if (altitude > 10000) return 16;
-  if (altitude > 5000) return 14;
-  return 12;
-}
+const AIRCRAFT_COLOR = "#3b82f6";
+const FETCH_INTERVAL = 10000;
 
 function formatAltitude(meters: number | null): string {
   if (!meters) return "N/A";
-  return `${Math.round(meters).toLocaleString()} m`;
+  const feet = Math.round(meters / 0.3048);
+  return `FL${Math.round(feet / 100)} (${Math.round(meters).toLocaleString()}m)`;
 }
 
 function formatSpeed(ms: number | null): string {
   if (!ms) return "N/A";
-  return `${Math.round(ms)} m/s`;
-}
-
-// Determine popup anchor based on aircraft position relative to map center
-function getPopupAnchor(
-  aircraftLat: number,
-  mapCenterLat: number
-): "top" | "bottom" {
-  // If aircraft is in upper half of view, show popup below (anchor top)
-  return aircraftLat > mapCenterLat ? "top" : "bottom";
+  const kts = Math.round(ms / 0.514444);
+  return `${kts} kts`;
 }
 
 export function AircraftLayer() {
@@ -42,66 +27,23 @@ export function AircraftLayer() {
   const [selectedAircraft, setSelectedAircraft] = useState<Aircraft | null>(null);
   const [aircraftPhoto, setAircraftPhoto] = useState<string | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
-
-  // Track if a fetch is in progress to prevent race conditions
   const fetchInProgress = useRef(false);
-  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastFetchPosition = useRef({ lat: 0, lon: 0 });
 
-  const fetchWithCenter = useCallback(async () => {
-    // Prevent concurrent fetches
+  const doFetch = useCallback(async () => {
     if (fetchInProgress.current) return;
-
     fetchInProgress.current = true;
     try {
-      await fetchAircraft(viewState.latitude, viewState.longitude);
-      lastFetchPosition.current = {
-        lat: viewState.latitude,
-        lon: viewState.longitude,
-      };
+      await fetchAircraft();
     } finally {
       fetchInProgress.current = false;
     }
-  }, [fetchAircraft, viewState.latitude, viewState.longitude]);
+  }, [fetchAircraft]);
 
-  // Initial fetch and regular interval
   useEffect(() => {
-    // Initial fetch
-    fetchWithCenter();
-
-    // Regular interval - use stored position to avoid dependency issues
-    const interval = setInterval(() => {
-      if (!fetchInProgress.current) {
-        fetchAircraft(lastFetchPosition.current.lat, lastFetchPosition.current.lon);
-      }
-    }, FETCH_INTERVAL);
-
+    doFetch();
+    const interval = setInterval(doFetch, FETCH_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchAircraft, fetchWithCenter]);
-
-  // Debounced fetch when position changes significantly
-  useEffect(() => {
-    const latDiff = Math.abs(viewState.latitude - lastFetchPosition.current.lat);
-    const lonDiff = Math.abs(viewState.longitude - lastFetchPosition.current.lon);
-
-    // Only refetch if moved more than ~50km
-    if (latDiff < 0.5 && lonDiff < 0.5) return;
-
-    // Debounce position-based fetches
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current);
-    }
-
-    debounceTimeout.current = setTimeout(() => {
-      fetchWithCenter();
-    }, DEBOUNCE_DELAY);
-
-    return () => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current);
-      }
-    };
-  }, [viewState.latitude, viewState.longitude, fetchWithCenter]);
+  }, [doFetch]);
 
   // Fetch photo when aircraft is selected
   useEffect(() => {
@@ -134,9 +76,7 @@ export function AircraftLayer() {
     fetchPhoto();
   }, [selectedAircraft]);
 
-  // Memoize aircraft list to prevent unnecessary re-renders
   const stableAircraft = useMemo(() => {
-    // Create a stable reference based on icao24 keys
     return aircraft.filter(p => p.latitude != null && p.longitude != null);
   }, [aircraft]);
 
@@ -159,8 +99,8 @@ export function AircraftLayer() {
           <div
             className="cursor-pointer transition-transform hover:scale-125"
             style={{
-              width: getAircraftSize(plane.altitude),
-              height: getAircraftSize(plane.altitude),
+              width: 14,
+              height: 14,
               color: AIRCRAFT_COLOR,
               filter: `drop-shadow(0 0 3px ${AIRCRAFT_COLOR})`,
             }}
@@ -176,11 +116,12 @@ export function AircraftLayer() {
         <Popup
           longitude={selectedAircraft.longitude!}
           latitude={selectedAircraft.latitude!}
-          anchor={getPopupAnchor(selectedAircraft.latitude!, viewState.latitude)}
+          anchor={selectedAircraft.latitude! > viewState.latitude ? "top" : "bottom"}
           onClose={() => setSelectedAircraft(null)}
           closeButton={true}
           closeOnClick={true}
           maxWidth="320px"
+          className="aircraft-popup"
         >
           <div className="min-w-64 rounded-lg bg-slate-900 p-3 text-slate-100">
             {/* Photo */}
@@ -225,10 +166,10 @@ export function AircraftLayer() {
 
             {/* Details */}
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-              <div>Altitude: {formatAltitude(selectedAircraft.altitude)}</div>
-              <div>Vitesse: {formatSpeed(selectedAircraft.velocity)}</div>
+              <div>Alt: {formatAltitude(selectedAircraft.altitude)}</div>
+              <div>Spd: {formatSpeed(selectedAircraft.velocity)}</div>
               <div>
-                Cap:{" "}
+                Hdg:{" "}
                 {selectedAircraft.heading
                   ? `${Math.round(selectedAircraft.heading)}°`
                   : "N/A"}

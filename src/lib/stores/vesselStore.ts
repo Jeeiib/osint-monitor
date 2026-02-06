@@ -34,8 +34,6 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
       reconnectTimeout = null;
     }
 
-    console.log("AISStream SSE: Connecting...");
-
     try {
       eventSource = new EventSource(SSE_URL);
     } catch (e) {
@@ -45,7 +43,6 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
     }
 
     eventSource.onopen = () => {
-      console.log("AISStream SSE: Connected");
       reconnectAttempts = 0;
       set({ isConnected: true, error: null });
     };
@@ -54,21 +51,14 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
       try {
         const data = JSON.parse(event.data);
 
-        if (data.type === "connected") {
-          console.log("AISStream SSE: WebSocket backend connected");
-          return;
-        }
+        if (data.type === "connected") return;
 
         if (data.type === "error") {
-          console.error("AISStream SSE: Backend error:", data.message);
           set({ error: data.message });
           return;
         }
 
-        if (data.type === "closed") {
-          console.log("AISStream SSE: Backend WebSocket closed:", data.code);
-          return;
-        }
+        if (data.type === "closed") return;
 
         if (data.type === "vessel" && data.vessel) {
           const v = data.vessel;
@@ -101,14 +91,13 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
             return { vessels: newVessels };
           });
         }
-      } catch (e) {
-        console.error("AISStream SSE: Failed to parse message:", e);
+      } catch {
+        // Ignore malformed messages
       }
     };
 
     eventSource.onerror = () => {
-      console.error("AISStream SSE: Connection error");
-      set({ error: "Erreur de connexion", isConnected: false });
+      set({ isConnected: false });
 
       // Close and cleanup
       if (eventSource) {
@@ -116,23 +105,19 @@ export const useVesselStore = create<VesselStore>((set, get) => ({
         eventSource = null;
       }
 
-      // Reconnect logic
+      // Silently reconnect up to MAX_RECONNECT_ATTEMPTS
       if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts++;
-        console.log(`AISStream SSE: Reconnecting in ${RECONNECT_DELAY/1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
-
         reconnectTimeout = setTimeout(() => {
           get().connect();
         }, RECONNECT_DELAY);
       } else {
-        console.log("AISStream SSE: Max reconnection attempts reached");
-        set({ error: "Connexion impossible" });
+        set({ error: "AIS indisponible" });
       }
     };
   },
 
   disconnect: () => {
-    console.log("AISStream SSE: Disconnecting...");
 
     // Clear reconnect timeout
     if (reconnectTimeout) {

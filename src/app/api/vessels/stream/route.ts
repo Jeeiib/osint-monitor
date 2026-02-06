@@ -19,8 +19,6 @@ export async function GET() {
 
   const stream = new ReadableStream({
     start(controller) {
-      console.log("SSE: Starting vessel stream...");
-
       let isClosed = false;
       const ws = new WebSocket(AISSTREAM_URL);
 
@@ -38,7 +36,6 @@ export async function GET() {
       };
 
       ws.on("open", () => {
-        console.log("SSE: WebSocket connected to AISStream");
 
         const subscriptionMessage = {
           APIKey: API_KEY,
@@ -67,7 +64,6 @@ export async function GET() {
 
             if (MILITARY_SHIP_TYPES.has(shipType)) {
               militaryVessels.add(meta.MMSI);
-              console.log(`SSE: Military vessel identified: ${meta.ShipName} (${meta.MMSI})`);
             }
           }
 
@@ -95,20 +91,16 @@ export async function GET() {
 
             safeEnqueue(`data: ${JSON.stringify({ type: "vessel", vessel })}\n\n`);
           }
-        } catch (e) {
-          if (!isClosed) {
-            console.error("SSE: Failed to parse message:", e);
-          }
+        } catch {
+          // Ignore malformed messages
         }
       });
 
       ws.on("error", (error) => {
-        console.error("SSE: WebSocket error:", error.message);
         safeEnqueue(`data: ${JSON.stringify({ type: "error", message: error.message })}\n\n`);
       });
 
-      ws.on("close", (code, reason) => {
-        console.log("SSE: WebSocket closed:", code, reason.toString());
+      ws.on("close", (code) => {
         if (!isClosed) {
           safeEnqueue(`data: ${JSON.stringify({ type: "closed", code })}\n\n`);
           isClosed = true;

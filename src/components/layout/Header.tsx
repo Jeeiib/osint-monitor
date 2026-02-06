@@ -1,57 +1,42 @@
 "use client";
 
-import { Search, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useEarthquakeStore, useConflictStore } from "@/lib/stores";
+import { Settings } from "lucide-react";
+import { useEventsStore, useEarthquakeStore, useAircraftStore } from "@/lib/stores";
 
 export function Header() {
-  const { earthquakes, isLoading: earthquakesLoading } = useEarthquakeStore();
-  const { conflicts, isLoading: conflictsLoading } = useConflictStore();
+  const { events, isLoading: eventsLoading } = useEventsStore();
+  const { earthquakes, isLoading: quakesLoading } = useEarthquakeStore();
+  const { aircraft } = useAircraftStore();
 
-  const totalQuakes = earthquakes.length;
-  const totalConflicts = conflicts.length;
+  const significantQuakes = earthquakes.filter((eq) => eq.magnitude >= 5.5);
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 backdrop-blur">
+    <header className="relative z-20 flex h-10 items-center justify-between border-b border-white/5 bg-slate-900/60 px-4 backdrop-blur-xl">
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-red-600 flex items-center justify-center">
-          <span className="text-xs font-bold">OS</span>
+        <div className="flex h-6 w-6 items-center justify-center rounded bg-red-600">
+          <span className="text-[10px] font-bold">OS</span>
         </div>
-        <span className="font-semibold text-slate-200">OSINT Monitor</span>
-      </div>
-
-      {/* Search */}
-      <div className="flex-1 max-w-md mx-4">
-        <Button
-          variant="outline"
-          className="w-full justify-start text-slate-400 bg-slate-800/50 border-slate-700 hover:bg-slate-800"
-        >
-          <Search className="mr-2 h-4 w-4" />
-          <span>Rechercher...</span>
-          <kbd className="ml-auto text-xs bg-slate-700 px-2 py-0.5 rounded">⌘K</kbd>
-        </Button>
+        <span className="text-sm font-semibold text-slate-300">OSINT Monitor</span>
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 text-sm">
-        <span className="text-red-500 flex items-center gap-1">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-          </span>
-          {conflictsLoading ? "..." : `${totalConflicts} conflits`}
+      <div className="flex items-center gap-4 text-xs text-slate-400">
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+          {eventsLoading ? "..." : `${events.length} events`}
         </span>
-        <span className="text-orange-500 flex items-center gap-1">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-          </span>
-          {earthquakesLoading ? "..." : `${totalQuakes} séismes`}
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+          {quakesLoading ? "..." : `${significantQuakes.length} quakes`}
         </span>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Settings className="h-4 w-4" />
-        </Button>
+        <span className="flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+          {`${aircraft.length} aircraft`}
+        </span>
+        <button className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300">
+          <Settings className="h-3.5 w-3.5" />
+        </button>
       </div>
     </header>
   );

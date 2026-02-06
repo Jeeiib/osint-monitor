@@ -18,12 +18,12 @@ export const useEarthquakeStore = create<EarthquakeStore>((set) => ({
   fetchEarthquakes: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch("/api/earthquakes?period=day&minMag=2.5");
+      const response = await fetch("/api/earthquakes");
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
       set({ earthquakes: data, isLoading: false, lastUpdate: new Date() });
-    } catch (error) {
-      set({ error: (error as Error).message, isLoading: false });
+    } catch {
+      set({ isLoading: false });
     }
   },
 }));

@@ -68,7 +68,22 @@
   }
 }
 
-/* Mapbox popup styling for dark theme */
+/* Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(51 65 85 / 0.5);
+  border-radius: 2px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(71 85 105 / 0.7);
+}
+
+/* Mapbox popup base style (dark theme) */
 .mapboxgl-popup-content {
   background: rgb(15 23 42) !important;
   border: 1px solid rgb(51 65 85) !important;
@@ -94,4 +109,16 @@
 .mapboxgl-popup-tip {
   border-top-color: rgb(15 23 42) !important;
   border-bottom-color: rgb(15 23 42) !important;
+}
+
+/* Mapbox cluster markers */
+.cluster-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }

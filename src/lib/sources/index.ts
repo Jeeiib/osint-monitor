@@ -1,2 +1,3 @@
 export { fetchEarthquakes } from "./usgs";
-export { fetchMilitaryAircraft, fetchAircraftByPoint, fetchAllAircraft } from "./airplaneslive";
+export { fetchMilitaryAircraft } from "./airplaneslive";
+export { fetchGdeltEvents } from "./gdelt-doc";
