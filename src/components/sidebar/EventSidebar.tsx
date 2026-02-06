@@ -2,22 +2,11 @@
 
 import { useEffect } from "react";
 import { PanelRightClose, PanelRightOpen, Newspaper, Radio } from "lucide-react";
-import { useEventsStore, useSidebarStore } from "@/lib/stores";
+import { useEventsStore, useSidebarStore, useSocialStore } from "@/lib/stores";
 import { EventCard } from "./EventCard";
+import { SocialPostCard } from "./SocialPostCard";
 
 const SIDEBAR_WIDTH = 380;
-
-// OSINT accounts to display in the social feed
-const OSINT_ACCOUNTS = [
-  { handle: "@IntelCrab", platform: "X", topic: "Global conflicts & military" },
-  { handle: "@OSINTdefender", platform: "X", topic: "Ukraine/Russia, Middle East" },
-  { handle: "@Liveuamap", platform: "X", topic: "Conflict mapping" },
-  { handle: "@TheIntelLab", platform: "X", topic: "Geopolitical intelligence" },
-  { handle: "@sentdefender", platform: "X", topic: "Military & defense" },
-  { handle: "@GeoConfirmed", platform: "X", topic: "Geolocated events" },
-  { handle: "@Flash_news_ua", platform: "Telegram", topic: "Breaking conflict news" },
-  { handle: "@intelooperRus", platform: "Telegram", topic: "Russia/Ukraine OSINT" },
-];
 
 function LoadingSkeleton() {
   return (
@@ -33,42 +22,28 @@ function LoadingSkeleton() {
   );
 }
 
-function SocialFeedPlaceholder() {
-  return (
-    <div className="p-3 space-y-3">
-      <div className="rounded-lg border border-white/5 bg-slate-900/40 p-3">
-        <p className="text-xs text-slate-400 mb-3">
-          Real-time OSINT social feeds — connect your API keys to enable live updates
-        </p>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="h-2 w-2 rounded-full bg-yellow-500/60 animate-pulse" />
-          Awaiting integration
-        </div>
-      </div>
+function SocialFeedContent() {
+  const { posts, isLoading } = useSocialStore();
 
-      <div className="space-y-1.5">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-600 px-1">
-          Monitored accounts
-        </p>
-        {OSINT_ACCOUNTS.map((account) => (
-          <div
-            key={account.handle}
-            className="flex items-center gap-3 rounded-lg border border-white/5 bg-slate-900/30 p-2.5 transition-colors hover:bg-slate-800/50"
-          >
-            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-              account.platform === "Telegram" ? "bg-blue-500/10" : "bg-slate-700/50"
-            }`}>
-              <span className="text-[10px] font-bold text-slate-400">
-                {account.platform === "Telegram" ? "TG" : "X"}
-              </span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-300">{account.handle}</p>
-              <p className="text-xs text-slate-600 truncate">{account.topic}</p>
-            </div>
-          </div>
-        ))}
+  if (isLoading && posts.length === 0) {
+    return <LoadingSkeleton />;
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+        <Radio className="mb-2 h-8 w-8 opacity-30" />
+        <p className="text-sm">No posts yet</p>
+        <p className="mt-1 text-xs text-slate-600">Feed updates every 5 minutes</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 p-3">
+      {posts.map((post) => (
+        <SocialPostCard key={post.id} post={post} />
+      ))}
     </div>
   );
 }
@@ -76,12 +51,18 @@ function SocialFeedPlaceholder() {
 export function EventSidebar() {
   const { isOpen, activeTab, toggleSidebar, setTab } = useSidebarStore();
   const { events, isLoading: eventsLoading, fetchEvents, selectedEventIndex, selectEvent } = useEventsStore();
+  const { fetchPosts: fetchSocialPosts } = useSocialStore();
 
   useEffect(() => {
     fetchEvents();
-    const interval = setInterval(fetchEvents, 10 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchEvents]);
+    fetchSocialPosts();
+    const eventsInterval = setInterval(fetchEvents, 10 * 60 * 1000);
+    const socialInterval = setInterval(fetchSocialPosts, 5 * 60 * 1000);
+    return () => {
+      clearInterval(eventsInterval);
+      clearInterval(socialInterval);
+    };
+  }, [fetchEvents, fetchSocialPosts]);
 
   const tabs = [
     { id: "social" as const, label: "Social Feed", Icon: Radio, color: "emerald" },
@@ -154,7 +135,7 @@ export function EventSidebar() {
         {/* Content */}
         <div className="flex-1 overflow-y-auto scrollbar-thin">
           {activeTab === "social" && (
-            <SocialFeedPlaceholder />
+            <SocialFeedContent />
           )}
 
           {activeTab === "articles" && (

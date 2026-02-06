@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { Marker, Popup } from "react-map-gl/mapbox";
+import { ExternalLink } from "lucide-react";
 import { useVesselStore, useFilterStore, useMapStore } from "@/lib/stores";
+import { getCountryFromMMSI, getVesselFinderUrl } from "@/lib/utils/mid";
 import type { Vessel } from "@/types/vessel";
 
 const VESSEL_COLOR = "#06b6d4";
@@ -10,6 +12,55 @@ const VESSEL_COLOR = "#06b6d4";
 function formatSpeed(knots: number | null): string {
   if (!knots) return "0 kts";
   return `${knots.toFixed(1)} kts`;
+}
+
+function VesselPopupContent({ vessel }: { vessel: Vessel }) {
+  const country = useMemo(() => getCountryFromMMSI(vessel.mmsi), [vessel.mmsi]);
+  const vesselFinderUrl = getVesselFinderUrl(vessel.mmsi);
+
+  return (
+    <div className="p-3 min-w-56 bg-slate-900 text-slate-100 rounded-lg">
+      <div className="flex items-center gap-2 mb-2">
+        <span
+          className="w-3 h-3 rounded-full shrink-0"
+          style={{ backgroundColor: VESSEL_COLOR }}
+        />
+        <span className="font-bold text-lg leading-tight">
+          {vessel.name || `MMSI: ${vessel.mmsi}`}
+        </span>
+      </div>
+
+      {country && (
+        <div className="flex items-center gap-1.5 text-xs text-slate-300 mb-2">
+          <span className="text-sm">{country.flag}</span>
+          <span>{country.country}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+        <div>Speed: {formatSpeed(vessel.speedOverGround)}</div>
+        <div>Hdg: {vessel.heading ? `${Math.round(vessel.heading)}°` : "N/A"}</div>
+        <div>MMSI: {vessel.mmsi}</div>
+        <div>COG: {vessel.courseOverGround ? `${Math.round(vessel.courseOverGround)}°` : "N/A"}</div>
+      </div>
+
+      {vessel.destination && (
+        <p className="text-xs text-slate-400 mt-2">
+          Dest: {vessel.destination}
+        </p>
+      )}
+
+      <a
+        href={vesselFinderUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1.5 mt-3 pt-2 border-t border-slate-700 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+      >
+        <ExternalLink size={12} />
+        View on VesselFinder
+      </a>
+    </div>
+  );
 }
 
 export function VesselLayer() {
@@ -80,44 +131,10 @@ export function VesselLayer() {
           closeOnClick={true}
           className="vessel-popup"
         >
-          <div className="p-3 min-w-52 bg-slate-900 text-slate-100 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: VESSEL_COLOR }}
-              />
-              <span className="font-bold text-lg">
-                {selectedVessel.name || `MMSI: ${selectedVessel.mmsi}`}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-              <div>Speed: {formatSpeed(selectedVessel.speedOverGround)}</div>
-              <div>Hdg: {selectedVessel.heading ? `${Math.round(selectedVessel.heading)}°` : "N/A"}</div>
-              <div>MMSI: {selectedVessel.mmsi}</div>
-              <div>COG: {selectedVessel.courseOverGround ? `${Math.round(selectedVessel.courseOverGround)}°` : "N/A"}</div>
-            </div>
-            {selectedVessel.destination && (
-              <p className="text-xs text-slate-400 mt-2">
-                Dest: {selectedVessel.destination}
-              </p>
-            )}
-          </div>
+          <VesselPopupContent vessel={selectedVessel} />
         </Popup>
       )}
 
-      {/* Connection status - hide when connected with 0 vessels */}
-      {showVessels && (error || !isConnected || vesselArray.length > 0) && (
-        <div className="absolute bottom-20 left-4 z-10 text-xs">
-          <span className={`flex items-center gap-1.5 px-2 py-1 rounded bg-slate-900/80 backdrop-blur ${
-            error ? "text-red-400" : isConnected ? "text-cyan-400" : "text-slate-500"
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${
-              error ? "bg-red-400" : isConnected ? "bg-cyan-400 animate-pulse" : "bg-slate-500"
-            }`} />
-            {error ? "AIS Error" : isConnected ? `${vesselArray.length} vessels` : "Connecting..."}
-          </span>
-        </div>
-      )}
     </>
   );
 }

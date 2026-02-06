@@ -3,6 +3,8 @@ export interface Aircraft {
   callsign: string | null;  // Flight callsign (e.g., "AFR123")
   registration: string | null; // Aircraft registration
   aircraftType: string | null; // ICAO type code (e.g., "B738")
+  description: string | null;  // Full aircraft description (e.g., "Boeing C-17A Globemaster III")
+  operator: string | null;     // Operator name (e.g., "United States Navy")
   originCountry: string | null; // Derived from ICAO hex prefix
   longitude: number | null;
   latitude: number | null;
@@ -19,8 +21,10 @@ export interface Aircraft {
 export interface AirplanesLiveAircraft {
   hex: string;
   flight?: string;
-  r?: string;  // registration
-  t?: string;  // type
+  r?: string;      // registration
+  t?: string;      // ICAO type code
+  desc?: string;   // Full aircraft description
+  ownOp?: string;  // Operator name
   lat?: number;
   lon?: number;
   alt_baro?: number | "ground";

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import React from "react";
 import type { GdeltArticle } from "@/types/gdelt";
+import type { SocialPost } from "@/types/social";
 
 const mocks = vi.hoisted(() => ({
   events: [] as GdeltArticle[],
@@ -11,11 +12,19 @@ const mocks = vi.hoisted(() => ({
   toggleSidebar: vi.fn(),
   setTab: vi.fn(),
   selectEvent: vi.fn(),
+  socialPosts: [] as SocialPost[],
+  socialIsLoading: false,
+  fetchPosts: vi.fn(),
 }));
 
 vi.mock("../EventCard", () => ({
-  EventCard: ({ event, index }: { event: GdeltArticle; index: number }) =>
+  EventCard: ({ event }: { event: GdeltArticle; index: number }) =>
     React.createElement("div", { "data-testid": "event-card" }, event.title),
+}));
+
+vi.mock("../SocialPostCard", () => ({
+  SocialPostCard: ({ post }: { post: SocialPost }) =>
+    React.createElement("div", { "data-testid": "social-post-card" }, post.content),
 }));
 
 vi.mock("@/lib/stores", () => ({
@@ -34,6 +43,11 @@ vi.mock("@/lib/stores", () => ({
     open: vi.fn(),
     close: vi.fn(),
   }),
+  useSocialStore: () => ({
+    posts: mocks.socialPosts,
+    isLoading: mocks.socialIsLoading,
+    fetchPosts: mocks.fetchPosts,
+  }),
 }));
 
 // Mock ALL icons used by EventSidebar
@@ -42,19 +56,35 @@ vi.mock("lucide-react", () => ({
   PanelRightOpen: (props: any) => React.createElement("svg", { "data-testid": "icon-PanelRightOpen", ...props }),
   Newspaper: (props: any) => React.createElement("svg", { "data-testid": "icon-Newspaper", ...props }),
   Radio: (props: any) => React.createElement("svg", { "data-testid": "icon-Radio", ...props }),
-  // EventCard also imports these (even though it's mocked, the mock factory still needs them)
   ExternalLink: (props: any) => React.createElement("svg", { "data-testid": "icon-ExternalLink", ...props }),
   Globe: (props: any) => React.createElement("svg", { "data-testid": "icon-Globe", ...props }),
+  ChevronDown: (props: any) => React.createElement("svg", { "data-testid": "icon-ChevronDown", ...props }),
+  ChevronUp: (props: any) => React.createElement("svg", { "data-testid": "icon-ChevronUp", ...props }),
 }));
 
 import { EventSidebar } from "../EventSidebar";
+
+const createMockSocialPost = (overrides: Partial<SocialPost> = {}): SocialPost => ({
+  id: "post-1",
+  author: "IntelCrab",
+  authorHandle: "@IntelCrab",
+  platform: "x",
+  content: "Breaking: Military activity detected",
+  url: "https://twitter.com/1",
+  timestamp: new Date("2026-02-06T12:00:00Z"),
+  topic: "military",
+  ...overrides,
+});
 
 describe("EventSidebar", () => {
   beforeEach(() => {
     mocks.events = [];
     mocks.isLoading = false;
     mocks.activeTab = "social";
+    mocks.socialPosts = [];
+    mocks.socialIsLoading = false;
     mocks.fetchEvents.mockClear();
+    mocks.fetchPosts.mockClear();
     mocks.toggleSidebar.mockClear();
     mocks.setTab.mockClear();
     mocks.selectEvent.mockClear();
@@ -65,9 +95,10 @@ describe("EventSidebar", () => {
     expect(screen.getByText("Intelligence Feed")).toBeInTheDocument();
   });
 
-  it("calls fetchEvents on mount", () => {
+  it("calls fetchEvents and fetchPosts on mount", () => {
     render(<EventSidebar />);
     expect(mocks.fetchEvents).toHaveBeenCalledTimes(1);
+    expect(mocks.fetchPosts).toHaveBeenCalledTimes(1);
   });
 
   it("renders tab buttons for Social Feed and Articles", () => {
@@ -82,11 +113,32 @@ describe("EventSidebar", () => {
     expect(mocks.setTab).toHaveBeenCalledWith("articles");
   });
 
-  it("shows Social Feed placeholder when social tab is active", () => {
+  it("shows empty state when social tab is active with no posts", () => {
     mocks.activeTab = "social";
     render(<EventSidebar />);
-    expect(screen.getByText(/Real-time OSINT social feeds/)).toBeInTheDocument();
-    expect(screen.getByText(/Awaiting integration/)).toBeInTheDocument();
+    expect(screen.getByText("No posts yet")).toBeInTheDocument();
+    expect(screen.getByText("Feed updates every 5 minutes")).toBeInTheDocument();
+  });
+
+  it("shows social posts when available", () => {
+    mocks.activeTab = "social";
+    mocks.socialPosts = [
+      createMockSocialPost({ id: "1", content: "Breaking news from region" }),
+      createMockSocialPost({ id: "2", content: "Earthquake detected" }),
+    ];
+    render(<EventSidebar />);
+    expect(screen.getAllByTestId("social-post-card")).toHaveLength(2);
+    expect(screen.getByText("Breaking news from region")).toBeInTheDocument();
+  });
+
+  it("shows loading skeleton when social feed is loading with no posts", () => {
+    mocks.activeTab = "social";
+    mocks.socialIsLoading = true;
+    render(<EventSidebar />);
+    const skeletons = screen.getAllByRole("generic").filter((el) =>
+      el.className.includes("animate-pulse")
+    );
+    expect(skeletons.length).toBeGreaterThan(0);
   });
 
   it("shows loading skeleton when events are loading", () => {
@@ -139,14 +191,6 @@ describe("EventSidebar", () => {
       fireEvent.click(toggleButton);
       expect(mocks.toggleSidebar).toHaveBeenCalledTimes(1);
     }
-  });
-
-  it("renders monitored OSINT accounts in social feed", () => {
-    mocks.activeTab = "social";
-    render(<EventSidebar />);
-    expect(screen.getByText("@IntelCrab")).toBeInTheDocument();
-    expect(screen.getByText("@OSINTdefender")).toBeInTheDocument();
-    expect(screen.getByText("@Liveuamap")).toBeInTheDocument();
   });
 
   it("applies active styling to selected tab", () => {
