@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Bell, BellOff } from "lucide-react";
+import { Settings, Bell, BellOff, Bug } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEventsStore, useEarthquakeStore, useAircraftStore, useAlertStore } from "@/lib/stores";
 import { AlertPanel } from "@/components/alerts/AlertPanel";
@@ -16,6 +16,9 @@ export function Header() {
   const isMuted = useAlertStore((s) => s.isMuted);
   const toggleMute = useAlertStore((s) => s.toggleMute);
   const togglePanel = useAlertStore((s) => s.togglePanel);
+  const triggerTestAlert = useAlertStore((s) => s.triggerTestAlert);
+
+  const isDev = process.env.NODE_ENV === "development";
 
   const significantQuakes = earthquakes.filter((eq) => eq.magnitude >= 5.5);
 
@@ -43,6 +46,22 @@ export function Header() {
           <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
           {t("aircraft", { count: aircraft.length })}
         </span>
+
+        {/* Dev: test alerts */}
+        {isDev && (
+          <div className="flex items-center gap-0.5 rounded border border-dashed border-yellow-500/30 px-1">
+            <Bug className="h-3 w-3 text-yellow-500/60" />
+            {(["earthquake", "event", "social"] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => triggerTestAlert(type)}
+                className="rounded px-1 py-0.5 text-[9px] font-medium text-yellow-500/80 transition-colors hover:bg-yellow-500/10"
+              >
+                {type === "earthquake" ? "Quake" : type === "event" ? "News" : "Social"}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Mute toggle */}
         <button

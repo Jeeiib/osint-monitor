@@ -2,6 +2,7 @@
 
 import { Header } from "./Header";
 import { EventSidebar } from "@/components/sidebar/EventSidebar";
+import { Toaster } from "@/components/ui/toaster";
 import { useAlertSystem } from "@/lib/hooks/useAlertSystem";
 
 interface MainLayoutProps {
@@ -18,6 +19,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <main className="h-full w-full">{children}</main>
         <EventSidebar />
       </div>
+      <Toaster />
     </div>
   );
 }

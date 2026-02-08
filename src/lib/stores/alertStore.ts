@@ -52,6 +52,7 @@ interface AlertStore {
   checkEarthquakes: (quakes: Earthquake[]) => void;
   checkEvents: (events: GdeltArticle[]) => void;
   checkSocialPosts: (posts: SocialPost[]) => void;
+  triggerTestAlert: (type: "earthquake" | "event" | "social") => void;
 }
 
 let alertCounter = 0;
@@ -328,6 +329,7 @@ export const useAlertStore = create<AlertStore>((set, get) => ({
 
     // ── Check 3: Multi-source correlation ──
     // Extract proper nouns from new posts, group by term
+    // Extract proper nouns from new posts, group by term
     const termToHandles = new Map<string, Set<string>>();
     for (const p of newPosts) {
       const matches = p.content.match(PROPER_NOUN_RE) ?? [];
@@ -353,5 +355,39 @@ export const useAlertStore = create<AlertStore>((set, get) => ({
         });
       }
     }
+  },
+
+  // ── Dev-only: trigger a test alert ─────────────────────────────
+  triggerTestAlert: (type) => {
+    const { addAlert } = get();
+
+    const testAlerts: Record<string, Omit<Alert, "id" | "timestamp" | "read">> = {
+      earthquake: {
+        title: "M7.2 Earthquake",
+        description: "120km SW of Tonga Islands",
+        severity: "critical",
+        source: "earthquake",
+        url: "https://earthquake.usgs.gov",
+        coordinates: { latitude: -21.2, longitude: -175.2 },
+      },
+      event: {
+        title: "3 new articles",
+        description: "Ukraine confirms counter-offensive in Kherson region",
+        severity: "medium",
+        source: "event",
+        url: "https://news.google.com",
+        coordinates: { latitude: 46.6, longitude: 32.6 },
+      },
+      social: {
+        title: "OSINT: @IntelCrab",
+        description: "BREAKING: Multiple explosions reported in southern Beirut, large plumes of smoke visible",
+        severity: "high",
+        source: "social",
+        url: "https://bsky.app",
+      },
+    };
+
+    const alert = testAlerts[type];
+    if (alert) addAlert(alert);
   },
 }));
