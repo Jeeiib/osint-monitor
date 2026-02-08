@@ -4,8 +4,8 @@ import { fetchRssFeed, RSS_FEEDS } from "@/lib/sources/rss";
 import { translateBatch } from "@/lib/sources/translate";
 import type { SocialPost } from "@/types/social";
 
-// Server-side cache (5 minutes)
-let cache: { data: SocialPost[]; timestamp: number; lang: string } | null = null;
+// Server-side cache per language (5 minutes)
+const cacheByLang = new Map<string, { data: SocialPost[]; timestamp: number }>();
 const CACHE_DURATION = 5 * 60 * 1000;
 const MAX_POSTS = 50;
 
@@ -24,8 +24,9 @@ export async function GET(request: Request) {
   const lang = searchParams.get("lang") || "fr";
 
   try {
-    if (cache && Date.now() - cache.timestamp < CACHE_DURATION && cache.lang === lang) {
-      return NextResponse.json(cache.data);
+    const cached = cacheByLang.get(lang);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return NextResponse.json(cached.data);
     }
 
     // Fetch all sources in parallel
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
       }
     }
 
-    cache = { data: posts, timestamp: Date.now(), lang };
+    cacheByLang.set(lang, { data: posts, timestamp: Date.now() });
 
     return NextResponse.json(posts);
   } catch {

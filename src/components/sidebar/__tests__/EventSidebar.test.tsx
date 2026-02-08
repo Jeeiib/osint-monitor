@@ -90,9 +90,9 @@ describe("EventSidebar", () => {
     mocks.selectEvent.mockClear();
   });
 
-  it("renders Intelligence Feed header", () => {
+  it("renders Flux Intelligence header", () => {
     render(<EventSidebar />);
-    expect(screen.getByText("Intelligence Feed")).toBeInTheDocument();
+    expect(screen.getByText("Flux Intelligence")).toBeInTheDocument();
   });
 
   it("calls fetchEvents and fetchPosts on mount", () => {
@@ -101,9 +101,9 @@ describe("EventSidebar", () => {
     expect(mocks.fetchPosts).toHaveBeenCalledTimes(1);
   });
 
-  it("renders tab buttons for Social Feed and Articles", () => {
+  it("renders tab buttons for Flux Social and Articles", () => {
     render(<EventSidebar />);
-    expect(screen.getByText("Social Feed")).toBeInTheDocument();
+    expect(screen.getByText("Flux Social")).toBeInTheDocument();
     expect(screen.getByText("Articles")).toBeInTheDocument();
   });
 
@@ -116,8 +116,8 @@ describe("EventSidebar", () => {
   it("shows empty state when social tab is active with no posts", () => {
     mocks.activeTab = "social";
     render(<EventSidebar />);
-    expect(screen.getByText("No posts yet")).toBeInTheDocument();
-    expect(screen.getByText("Feed updates every 5 minutes")).toBeInTheDocument();
+    expect(screen.getByText("Aucun post")).toBeInTheDocument();
+    expect(screen.getByText("Mise à jour toutes les 5 min")).toBeInTheDocument();
   });
 
   it("shows social posts when available", () => {
@@ -151,13 +151,13 @@ describe("EventSidebar", () => {
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
-  it("shows 'No articles yet' message when events array is empty", () => {
+  it("shows 'Aucun article' message when events array is empty", () => {
     mocks.activeTab = "articles";
     mocks.isLoading = false;
     mocks.events = [];
     render(<EventSidebar />);
-    expect(screen.getByText("No articles yet")).toBeInTheDocument();
-    expect(screen.getByText("Click a red dot on the map")).toBeInTheDocument();
+    expect(screen.getByText("Aucun article")).toBeInTheDocument();
+    expect(screen.getByText("Cliquez sur un point rouge sur la carte")).toBeInTheDocument();
   });
 
   it("renders EventCard list when events exist", () => {

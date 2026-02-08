@@ -61,7 +61,6 @@ describe("EventCard", () => {
 
   it("hides image on error", () => {
     const { container } = render(<EventCard event={mockEvent} index={0} isSelected={false} onSelect={mockOnSelect} />);
-    // Image has alt="" so role is "presentation", use querySelector instead
     const img = container.querySelector("img")!;
     expect(img).toBeTruthy();
     fireEvent.error(img);
@@ -70,7 +69,7 @@ describe("EventCard", () => {
 
   it("renders translate link with correct URL", () => {
     render(<EventCard event={mockEvent} index={0} isSelected={false} onSelect={mockOnSelect} />);
-    const translateLink = screen.getByText("Traduire FR");
+    const translateLink = screen.getByText("Traduire");
     expect(translateLink).toHaveAttribute(
       "href",
       `https://translate.google.com/translate?sl=auto&tl=fr&u=${encodeURIComponent(mockEvent.url)}`
@@ -92,7 +91,6 @@ describe("EventCard", () => {
 
   it("applies selected styling when isSelected is true", () => {
     const { container } = render(<EventCard event={mockEvent} index={0} isSelected={true} onSelect={mockOnSelect} />);
-    // The outer div (with id="event-card-0") has the selected classes
     const card = container.querySelector("#event-card-0")!;
     expect(card.className).toContain("border-red-500/40");
     expect(card.className).toContain("bg-red-500/10");
@@ -113,9 +111,8 @@ describe("EventCard", () => {
 
   it("stops propagation when clicking external links", () => {
     render(<EventCard event={mockEvent} index={0} isSelected={false} onSelect={mockOnSelect} />);
-    const readLink = screen.getByText("Read");
+    const readLink = screen.getByText("Lire");
     fireEvent.click(readLink);
-    // The link has onClick={(e) => e.stopPropagation()}, so onSelect should NOT be called
     expect(mockOnSelect).not.toHaveBeenCalled();
   });
 });

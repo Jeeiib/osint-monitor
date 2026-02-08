@@ -4,6 +4,7 @@ import { useCallback, useRef, useEffect, useState, useMemo } from "react";
 import Map, { Source, Layer, NavigationControl, Popup, type MapRef, type MapMouseEvent } from "react-map-gl/mapbox";
 import type { LayerProps } from "react-map-gl/mapbox";
 import type { FeatureCollection, Point } from "geojson";
+import { useTranslations } from "next-intl";
 import { useMapStore, useFilterStore, useEventsStore, useSidebarStore } from "@/lib/stores";
 import { EarthquakeLayer } from "./EarthquakeLayer";
 import { AircraftLayer } from "./AircraftLayer";
@@ -74,6 +75,7 @@ interface HoverInfo {
 }
 
 export function BaseMap({ className }: BaseMapProps) {
+  const t = useTranslations("map");
   const { viewState, setViewState, setMapRef } = useMapStore();
   const { showEvents } = useFilterStore();
   const { events, selectEvent } = useEventsStore();
@@ -203,7 +205,7 @@ export function BaseMap({ className }: BaseMapProps) {
   if (!MAPBOX_TOKEN) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-slate-900">
-        <p className="text-red-500">Mapbox token manquant</p>
+        <p className="text-red-500">{t("missingToken")}</p>
       </div>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { X, ExternalLink, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Alert } from "@/types/alert";
 import { useAlertStore } from "@/lib/stores/alertStore";
 import { useMapStore } from "@/lib/stores/mapStore";
@@ -23,10 +24,16 @@ const SEVERITY_STYLES: Record<string, { bg: string; border: string; badge: strin
   },
 };
 
-const SOURCE_LABELS: Record<string, string> = {
-  earthquake: "Seismic",
-  event: "GDELT",
-  social: "Social",
+const SEVERITY_KEYS: Record<string, string> = {
+  critical: "critical",
+  high: "high",
+  medium: "medium",
+};
+
+const SOURCE_KEYS: Record<string, string> = {
+  earthquake: "sourceEarthquake",
+  event: "sourceEvent",
+  social: "sourceSocial",
 };
 
 interface AlertCardProps {
@@ -34,13 +41,14 @@ interface AlertCardProps {
 }
 
 export function AlertCard({ alert }: AlertCardProps) {
+  const t = useTranslations("alerts");
   const dismissAlert = useAlertStore((s) => s.dismissAlert);
   const markAsRead = useAlertStore((s) => s.markAsRead);
   const closePanel = useAlertStore((s) => s.closePanel);
   const mapRef = useMapStore((s) => s.mapRef);
 
   const styles = SEVERITY_STYLES[alert.severity] ?? SEVERITY_STYLES.medium;
-  const age = formatAge(alert.timestamp);
+  const age = formatAge(alert.timestamp, t("now"));
 
   function handleClick() {
     if (!alert.read) markAsRead(alert.id);
@@ -65,9 +73,9 @@ export function AlertCard({ alert }: AlertCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${styles.badge}`}>
-            {alert.severity}
+            {t(SEVERITY_KEYS[alert.severity] ?? "medium")}
           </span>
-          <span className="text-[10px] text-slate-500">{SOURCE_LABELS[alert.source]}</span>
+          <span className="text-[10px] text-slate-500">{t(SOURCE_KEYS[alert.source] ?? "sourceEvent")}</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-slate-500">{age}</span>
@@ -94,7 +102,7 @@ export function AlertCard({ alert }: AlertCardProps) {
         {alert.coordinates && (
           <span className="flex items-center gap-0.5 text-[10px] text-slate-500">
             <MapPin className="h-2.5 w-2.5" />
-            Map
+            {t("map")}
           </span>
         )}
         {alert.url && (
@@ -106,7 +114,7 @@ export function AlertCard({ alert }: AlertCardProps) {
             className="flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-300"
           >
             <ExternalLink className="h-2.5 w-2.5" />
-            Source
+            {t("source")}
           </a>
         )}
       </div>
@@ -114,9 +122,9 @@ export function AlertCard({ alert }: AlertCardProps) {
   );
 }
 
-function formatAge(date: Date): string {
+function formatAge(date: Date, nowLabel: string): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return "now";
+  if (seconds < 60) return nowLabel;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);

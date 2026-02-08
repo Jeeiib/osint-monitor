@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { Marker, Popup } from "react-map-gl/mapbox";
 import { ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useVesselStore, useFilterStore, useMapStore } from "@/lib/stores";
 import { getCountryFromMMSI, getVesselFinderUrl } from "@/lib/utils/mid";
 import type { Vessel } from "@/types/vessel";
@@ -15,6 +16,7 @@ function formatSpeed(knots: number | null): string {
 }
 
 function VesselPopupContent({ vessel }: { vessel: Vessel }) {
+  const t = useTranslations("vessel");
   const country = useMemo(() => getCountryFromMMSI(vessel.mmsi), [vessel.mmsi]);
   const vesselFinderUrl = getVesselFinderUrl(vessel.mmsi);
 
@@ -26,7 +28,7 @@ function VesselPopupContent({ vessel }: { vessel: Vessel }) {
           style={{ backgroundColor: VESSEL_COLOR }}
         />
         <span className="font-bold text-lg leading-tight">
-          {vessel.name || `MMSI: ${vessel.mmsi}`}
+          {vessel.name || `${t("mmsi")}: ${vessel.mmsi}`}
         </span>
       </div>
 
@@ -38,15 +40,15 @@ function VesselPopupContent({ vessel }: { vessel: Vessel }) {
       )}
 
       <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-        <div>Speed: {formatSpeed(vessel.speedOverGround)}</div>
-        <div>Hdg: {vessel.heading ? `${Math.round(vessel.heading)}°` : "N/A"}</div>
-        <div>MMSI: {vessel.mmsi}</div>
-        <div>COG: {vessel.courseOverGround ? `${Math.round(vessel.courseOverGround)}°` : "N/A"}</div>
+        <div>{t("speed")}: {formatSpeed(vessel.speedOverGround)}</div>
+        <div>{t("hdg")}: {vessel.heading ? `${Math.round(vessel.heading)}°` : t("na")}</div>
+        <div>{t("mmsi")}: {vessel.mmsi}</div>
+        <div>{t("cog")}: {vessel.courseOverGround ? `${Math.round(vessel.courseOverGround)}°` : t("na")}</div>
       </div>
 
       {vessel.destination && (
         <p className="text-xs text-slate-400 mt-2">
-          Dest: {vessel.destination}
+          {t("dest")}: {vessel.destination}
         </p>
       )}
 
@@ -57,7 +59,7 @@ function VesselPopupContent({ vessel }: { vessel: Vessel }) {
         className="flex items-center gap-1.5 mt-3 pt-2 border-t border-slate-700 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
       >
         <ExternalLink size={12} />
-        View on VesselFinder
+        {t("viewOnVesselFinder")}
       </a>
     </div>
   );

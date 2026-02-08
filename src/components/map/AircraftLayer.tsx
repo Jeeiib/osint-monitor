@@ -2,25 +2,27 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Marker, Popup } from "react-map-gl/mapbox";
+import { useTranslations } from "next-intl";
 import { useAircraftStore, useFilterStore, useMapStore } from "@/lib/stores";
 import type { Aircraft } from "@/types/aircraft";
 
 const AIRCRAFT_COLOR = "#3b82f6";
 const FETCH_INTERVAL = 10000;
 
-function formatAltitude(meters: number | null): string {
-  if (!meters) return "N/A";
+function formatAltitude(meters: number | null, na: string): string {
+  if (!meters) return na;
   const feet = Math.round(meters / 0.3048);
   return `FL${Math.round(feet / 100)} (${Math.round(meters).toLocaleString()}m)`;
 }
 
-function formatSpeed(ms: number | null): string {
-  if (!ms) return "N/A";
+function formatSpeed(ms: number | null, na: string): string {
+  if (!ms) return na;
   const kts = Math.round(ms / 0.514444);
   return `${kts} kts`;
 }
 
 export function AircraftLayer() {
+  const t = useTranslations("aircraft");
   const { aircraft, fetchAircraft } = useAircraftStore();
   const { showAircraft } = useFilterStore();
   const { viewState } = useMapStore();
@@ -146,7 +148,7 @@ export function AircraftLayer() {
               </span>
               {selectedAircraft.isMilitary && (
                 <span className="rounded bg-blue-600 px-1.5 py-0.5 text-xs font-medium">
-                  MIL
+                  {t("mil")}
                 </span>
               )}
             </div>
@@ -166,17 +168,17 @@ export function AircraftLayer() {
 
             {/* Details */}
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-              <div>Alt: {formatAltitude(selectedAircraft.altitude)}</div>
-              <div>Spd: {formatSpeed(selectedAircraft.velocity)}</div>
+              <div>{t("alt")}: {formatAltitude(selectedAircraft.altitude, t("na"))}</div>
+              <div>{t("spd")}: {formatSpeed(selectedAircraft.velocity, t("na"))}</div>
               <div>
-                Hdg:{" "}
+                {t("hdg")}:{" "}
                 {selectedAircraft.heading
                   ? `${Math.round(selectedAircraft.heading)}°`
-                  : "N/A"}
+                  : t("na")}
               </div>
-              <div>ICAO: {selectedAircraft.icao24.toUpperCase()}</div>
+              <div>{t("icao")}: {selectedAircraft.icao24.toUpperCase()}</div>
               {selectedAircraft.squawk && (
-                <div>Squawk: {selectedAircraft.squawk}</div>
+                <div>{t("squawk")}: {selectedAircraft.squawk}</div>
               )}
             </div>
           </div>

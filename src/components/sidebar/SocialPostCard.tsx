@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { SocialPost, SocialPlatform, SocialTopic } from "@/types/social";
 
 const PLATFORM_CONFIG: Record<SocialPlatform, { label: string; bg: string; text: string }> = {
@@ -11,29 +12,41 @@ const PLATFORM_CONFIG: Record<SocialPlatform, { label: string; bg: string; text:
   rss: { label: "RSS", bg: "bg-orange-500/10", text: "text-orange-400" },
 };
 
-const TOPIC_CONFIG: Record<SocialTopic, { label: string; bg: string; text: string }> = {
-  conflict: { label: "Conflict", bg: "bg-red-500/15", text: "text-red-400" },
-  earthquake: { label: "Seismic", bg: "bg-amber-500/15", text: "text-amber-400" },
-  disaster: { label: "Disaster", bg: "bg-orange-500/15", text: "text-orange-400" },
-  military: { label: "Military", bg: "bg-purple-500/15", text: "text-purple-400" },
-  general: { label: "General", bg: "bg-slate-500/15", text: "text-slate-400" },
+const TOPIC_KEYS: Record<SocialTopic, string> = {
+  conflict: "conflict",
+  earthquake: "earthquake",
+  disaster: "disaster",
+  military: "military",
+  general: "general",
 };
 
-function formatRelativeTime(date: Date): string {
-  const now = Date.now();
-  const diff = now - new Date(date).getTime();
-  const minutes = Math.floor(diff / 60_000);
+const TOPIC_STYLES: Record<SocialTopic, { bg: string; text: string }> = {
+  conflict: { bg: "bg-red-500/15", text: "text-red-400" },
+  earthquake: { bg: "bg-amber-500/15", text: "text-amber-400" },
+  disaster: { bg: "bg-orange-500/15", text: "text-orange-400" },
+  military: { bg: "bg-purple-500/15", text: "text-purple-400" },
+  general: { bg: "bg-slate-500/15", text: "text-slate-400" },
+};
 
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
+function useRelativeTime() {
+  const t = useTranslations("social");
 
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  return (date: Date): string => {
+    const now = Date.now();
+    const diff = now - new Date(date).getTime();
+    const minutes = Math.floor(diff / 60_000);
 
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+    if (minutes < 1) return t("justNow");
+    if (minutes < 60) return t("minutesAgo", { minutes });
 
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t("hoursAgo", { hours });
+
+    const days = Math.floor(hours / 24);
+    if (days < 7) return t("daysAgo", { days });
+
+    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
 }
 
 const CONTENT_TRUNCATE_LENGTH = 140;
@@ -43,9 +56,12 @@ interface SocialPostCardProps {
 }
 
 export function SocialPostCard({ post }: SocialPostCardProps) {
+  const t = useTranslations("social");
+  const formatRelativeTime = useRelativeTime();
   const [expanded, setExpanded] = useState(false);
   const platform = PLATFORM_CONFIG[post.platform];
-  const topic = TOPIC_CONFIG[post.topic];
+  const topicKey = TOPIC_KEYS[post.topic];
+  const topicStyle = TOPIC_STYLES[post.topic];
   const isLong = post.content.length > CONTENT_TRUNCATE_LENGTH;
   const displayContent = expanded || !isLong
     ? post.content
@@ -74,7 +90,6 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
             alt=""
             className="h-full w-full object-cover"
             onError={(e) => {
-              // Hide the entire container, not just the img
               const container = (e.target as HTMLImageElement).parentElement;
               if (container) container.style.display = "none";
             }}
@@ -93,14 +108,14 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
           className="mb-2 flex items-center gap-0.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
         >
           {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {expanded ? "Show less" : "Show more"}
+          {expanded ? t("showLess") : t("showMore")}
         </button>
       )}
 
       {/* Footer: topic badge + link */}
       <div className="flex items-center justify-between">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${topic.bg} ${topic.text}`}>
-          {topic.label}
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${topicStyle.bg} ${topicStyle.text}`}>
+          {t(topicKey)}
         </span>
         <a
           href={post.url}
@@ -109,7 +124,7 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
           className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
         >
           <ExternalLink className="h-3 w-3" />
-          Source
+          {t("source")}
         </a>
       </div>
     </div>

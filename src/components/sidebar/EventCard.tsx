@@ -1,6 +1,7 @@
 "use client";
 
 import { ExternalLink, Globe } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 import { useMapStore } from "@/lib/stores";
 import type { GdeltArticle } from "@/types/gdelt";
 
@@ -11,19 +12,14 @@ interface EventCardProps {
   onSelect: (index: number) => void;
 }
 
-function formatTimeAgo(): string {
-  // GDELT GEO API doesn't provide per-article timestamps
-  // Articles are from the last 24h
-  return "< 24h";
-}
-
 function getSeverityWidth(count: number): string {
-  // Map article count (1-50+) to bar width %
   const pct = Math.min(100, Math.max(10, count * 3));
   return `${pct}%`;
 }
 
 export function EventCard({ event, index, isSelected, onSelect }: EventCardProps) {
+  const t = useTranslations("events");
+  const locale = useLocale();
   const { flyTo } = useMapStore();
 
   const handleClick = () => {
@@ -31,7 +27,7 @@ export function EventCard({ event, index, isSelected, onSelect }: EventCardProps
     flyTo(event.longitude, event.latitude, 6);
   };
 
-  const translateUrl = `https://translate.google.com/translate?sl=auto&tl=fr&u=${encodeURIComponent(event.url)}`;
+  const translateUrl = `https://translate.google.com/translate?sl=auto&tl=${locale}&u=${encodeURIComponent(event.url)}`;
 
   return (
     <div
@@ -69,11 +65,11 @@ export function EventCard({ event, index, isSelected, onSelect }: EventCardProps
           <Globe className="h-3 w-3 shrink-0" />
           <span className="truncate">{event.sourceDomain}</span>
           <span>·</span>
-          <span className="shrink-0">{formatTimeAgo()}</span>
+          <span className="shrink-0">{t("lessThan24h")}</span>
           {event.count > 1 && (
             <>
               <span>·</span>
-              <span className="shrink-0">{event.count} articles</span>
+              <span className="shrink-0">{t("articles", { count: event.count })}</span>
             </>
           )}
         </div>
@@ -99,7 +95,7 @@ export function EventCard({ event, index, isSelected, onSelect }: EventCardProps
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
           >
             <ExternalLink className="h-3 w-3" />
-            Read
+            {t("read")}
           </a>
           <a
             href={translateUrl}
@@ -108,7 +104,7 @@ export function EventCard({ event, index, isSelected, onSelect }: EventCardProps
             onClick={(e) => e.stopPropagation()}
             className="text-xs text-slate-500 hover:text-blue-400 transition-colors"
           >
-            Traduire FR
+            {t("translate")}
           </a>
         </div>
       </div>

@@ -7,7 +7,7 @@ interface SocialStore {
   isLoading: boolean;
   error: string | null;
   lastUpdate: Date | null;
-  fetchPosts: () => Promise<void>;
+  fetchPosts: (lang?: string) => Promise<void>;
 }
 
 export const useSocialStore = create<SocialStore>()(
@@ -17,10 +17,10 @@ export const useSocialStore = create<SocialStore>()(
     error: null,
     lastUpdate: null,
 
-    fetchPosts: async () => {
+    fetchPosts: async (lang = "fr") => {
       set({ isLoading: true, error: null });
       try {
-        const response = await fetch("/api/social");
+        const response = await fetch(`/api/social?lang=${lang}`);
         if (!response.ok) throw new Error("Failed to fetch social feed");
         const data = await response.json();
         // Re-hydrate timestamps from JSON strings

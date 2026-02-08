@@ -121,7 +121,7 @@ describe("eventsStore", () => {
 
       await fetchEvents();
 
-      expect(mockFetch).toHaveBeenCalledWith("/api/events");
+      expect(mockFetch).toHaveBeenCalledWith("/api/events?lang=fr");
     });
 
     it("should silently handle HTTP errors and set isLoading to false", async () => {

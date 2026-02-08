@@ -45,21 +45,21 @@ describe("FilterBar", () => {
   it("renders 4 filter buttons", () => {
     render(<FilterBar />);
 
-    expect(screen.getByText("Geopolitics")).toBeInTheDocument();
-    expect(screen.getByText("Military Air")).toBeInTheDocument();
+    expect(screen.getByText("Géopolitique")).toBeInTheDocument();
+    expect(screen.getByText("Aérien Mil.")).toBeInTheDocument();
     expect(screen.getByText("Naval")).toBeInTheDocument();
-    expect(screen.getByText("Seismic")).toBeInTheDocument();
+    expect(screen.getByText("Sismique")).toBeInTheDocument();
   });
 
-  it("calls toggleCategory with showEvents when Geopolitics is clicked", () => {
+  it("calls toggleCategory with showEvents when Géopolitique is clicked", () => {
     render(<FilterBar />);
-    fireEvent.click(screen.getByText("Geopolitics"));
+    fireEvent.click(screen.getByText("Géopolitique"));
     expect(mocks.toggleCategory).toHaveBeenCalledWith("showEvents");
   });
 
-  it("calls toggleCategory with showAircraft when Military Air is clicked", () => {
+  it("calls toggleCategory with showAircraft when Aérien Mil. is clicked", () => {
     render(<FilterBar />);
-    fireEvent.click(screen.getByText("Military Air"));
+    fireEvent.click(screen.getByText("Aérien Mil."));
     expect(mocks.toggleCategory).toHaveBeenCalledWith("showAircraft");
   });
 
@@ -69,9 +69,9 @@ describe("FilterBar", () => {
     expect(mocks.toggleCategory).toHaveBeenCalledWith("showVessels");
   });
 
-  it("calls toggleCategory with showEarthquakes when Seismic is clicked", () => {
+  it("calls toggleCategory with showEarthquakes when Sismique is clicked", () => {
     render(<FilterBar />);
-    fireEvent.click(screen.getByText("Seismic"));
+    fireEvent.click(screen.getByText("Sismique"));
     expect(mocks.toggleCategory).toHaveBeenCalledWith("showEarthquakes");
   });
 
@@ -86,7 +86,7 @@ describe("FilterBar", () => {
   it("applies active styling to active filters", () => {
     mocks.showEvents = true;
     render(<FilterBar />);
-    const btn = screen.getByText("Geopolitics").closest("button");
+    const btn = screen.getByText("Géopolitique").closest("button");
     expect(btn?.className).toContain("border-red-500/40");
     expect(btn?.className).toContain("bg-red-500/10");
     expect(btn?.className).toContain("text-red-400");
@@ -95,7 +95,7 @@ describe("FilterBar", () => {
   it("applies inactive styling to inactive filters", () => {
     mocks.showEvents = false;
     render(<FilterBar />);
-    const btn = screen.getByText("Geopolitics").closest("button");
+    const btn = screen.getByText("Géopolitique").closest("button");
     expect(btn?.className).toContain("border-white/5");
     expect(btn?.className).toContain("bg-slate-900/70");
     expect(btn?.className).toContain("text-slate-500");

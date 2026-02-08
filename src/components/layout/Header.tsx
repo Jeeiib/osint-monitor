@@ -1,10 +1,13 @@
 "use client";
 
 import { Settings, Bell, BellOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEventsStore, useEarthquakeStore, useAircraftStore, useAlertStore } from "@/lib/stores";
 import { AlertPanel } from "@/components/alerts/AlertPanel";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 
 export function Header() {
+  const t = useTranslations("header");
   const { events, isLoading: eventsLoading } = useEventsStore();
   const { earthquakes, isLoading: quakesLoading } = useEarthquakeStore();
   const { aircraft } = useAircraftStore();
@@ -23,29 +26,29 @@ export function Header() {
         <div className="flex h-6 w-6 items-center justify-center rounded bg-red-600">
           <span className="text-[10px] font-bold">OS</span>
         </div>
-        <span className="text-sm font-semibold text-slate-300">OSINT Monitor</span>
+        <span className="text-sm font-semibold text-slate-300">{t("title")}</span>
       </div>
 
       {/* Stats + Actions */}
       <div className="flex items-center gap-4 text-xs text-slate-400">
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-          {eventsLoading ? "..." : `${events.length} events`}
+          {eventsLoading ? "..." : t("events", { count: events.length })}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-          {quakesLoading ? "..." : `${significantQuakes.length} quakes`}
+          {quakesLoading ? "..." : t("quakes", { count: significantQuakes.length })}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-          {`${aircraft.length} aircraft`}
+          {t("aircraft", { count: aircraft.length })}
         </span>
 
         {/* Mute toggle */}
         <button
           onClick={toggleMute}
           className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
-          title={isMuted ? "Unmute alerts" : "Mute alerts"}
+          title={isMuted ? t("unmuteAlerts") : t("muteAlerts")}
         >
           {isMuted ? <BellOff className="h-3.5 w-3.5" /> : null}
         </button>
@@ -66,6 +69,8 @@ export function Header() {
           </button>
           <AlertPanel />
         </div>
+
+        <LocaleSwitcher />
 
         <button className="flex h-6 w-6 items-center justify-center rounded text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300">
           <Settings className="h-3.5 w-3.5" />

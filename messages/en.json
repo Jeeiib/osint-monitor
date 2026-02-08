@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "title": "OSINT Monitor",
+    "description": "Real-time global intelligence monitoring platform"
+  },
+  "header": {
+    "title": "OSINT Monitor",
+    "events": "{count} events",
+    "quakes": "{count} quakes",
+    "aircraft": "{count} aircraft",
+    "muteAlerts": "Mute alerts",
+    "unmuteAlerts": "Unmute alerts"
+  },
+  "filters": {
+    "geopolitics": "Geopolitics",
+    "militaryAir": "Military Air",
+    "naval": "Naval",
+    "seismic": "Seismic"
+  },
+  "sidebar": {
+    "title": "Intelligence Feed",
+    "socialFeed": "Social Feed",
+    "articles": "Articles",
+    "noPostsYet": "No posts yet",
+    "feedUpdates": "Feed updates every 5 minutes",
+    "noArticlesYet": "No articles yet",
+    "clickRedDot": "Click a red dot on the map"
+  },
+  "events": {
+    "lessThan24h": "< 24h",
+    "articles": "{count} articles",
+    "read": "Read",
+    "translate": "Translate"
+  },
+  "social": {
+    "justNow": "just now",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "source": "Source",
+    "conflict": "Conflict",
+    "earthquake": "Seismic",
+    "disaster": "Disaster",
+    "military": "Military",
+    "general": "General"
+  },
+  "military": {
+    "mil": "MIL",
+    "na": "N/A",
+    "kts": "{value} kts",
+    "mmsi": "MMSI {value}"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "titleWithCount": "Alerts ({count})",
+    "markAllRead": "Mark all read",
+    "noAlerts": "No alerts yet",
+    "map": "Map",
+    "source": "Source",
+    "now": "now",
+    "critical": "CRITICAL",
+    "high": "HIGH",
+    "medium": "MEDIUM",
+    "sourceEarthquake": "Seismic",
+    "sourceEvent": "GDELT",
+    "sourceSocial": "Social"
+  },
+  "map": {
+    "missingToken": "Mapbox token missing"
+  },
+  "aircraft": {
+    "mil": "MIL",
+    "alt": "Alt",
+    "spd": "Spd",
+    "hdg": "Hdg",
+    "icao": "ICAO",
+    "squawk": "Squawk",
+    "na": "N/A"
+  },
+  "vessel": {
+    "speed": "Speed",
+    "hdg": "Hdg",
+    "mmsi": "MMSI",
+    "cog": "COG",
+    "dest": "Dest",
+    "viewOnVesselFinder": "View on VesselFinder",
+    "na": "N/A"
+  },
+  "locale": {
+    "fr": "FR",
+    "en": "EN"
+  }
+}

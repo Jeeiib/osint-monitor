@@ -31,6 +31,21 @@ vi.mock("@/lib/stores", () => ({
     isLoading: false,
     fetchAircraft: vi.fn(),
   }),
+  useAlertStore: (selector?: (s: any) => any) => {
+    const state = {
+      alerts: [],
+      unreadCount: 0,
+      isMuted: false,
+      isPanelOpen: false,
+      toggleMute: vi.fn(),
+      togglePanel: vi.fn(),
+      closePanel: vi.fn(),
+      markAllAsRead: vi.fn(),
+      markAsRead: vi.fn(),
+      dismissAlert: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock("lucide-react", () => ({
@@ -41,6 +56,17 @@ vi.mock("lucide-react", () => ({
   Settings: (props: any) => React.createElement("svg", { "data-testid": "icon-Settings", ...props }),
   Radio: (props: any) => React.createElement("svg", { "data-testid": "icon-Radio", ...props }),
   Globe: (props: any) => React.createElement("svg", { "data-testid": "icon-Globe", ...props }),
+  Bell: (props: any) => React.createElement("svg", { "data-testid": "icon-Bell", ...props }),
+  BellOff: (props: any) => React.createElement("svg", { "data-testid": "icon-BellOff", ...props }),
+}));
+
+vi.mock("@/i18n/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ replace: vi.fn() }),
+}));
+
+vi.mock("@/components/alerts/AlertPanel", () => ({
+  AlertPanel: () => React.createElement("div", { "data-testid": "alert-panel" }),
 }));
 
 import { Header } from "../Header";
@@ -70,7 +96,7 @@ describe("Header", () => {
       { title: "Event 2", url: "https://example.com/2", image: "", sourceDomain: "example.com", latitude: 51, longitude: 31, locationName: "Location 2", count: 3, shareImage: "" },
     ];
     render(<Header />);
-    expect(screen.getByText("2 events")).toBeInTheDocument();
+    expect(screen.getByText("2 événements")).toBeInTheDocument();
   });
 
   it("shows '...' when events are loading", () => {
@@ -87,7 +113,7 @@ describe("Header", () => {
       { id: "3", magnitude: 4.2, place: "Minor quake", latitude: 40, longitude: -120, depth: 5, time: Date.now() },
     ];
     render(<Header />);
-    expect(screen.getByText("2 quakes")).toBeInTheDocument();
+    expect(screen.getByText("2 séismes")).toBeInTheDocument();
   });
 
   it("shows '...' when quakes are loading", () => {
@@ -103,14 +129,14 @@ describe("Header", () => {
       { icao24: "def456", callsign: "RAF02", registration: null, aircraftType: null, originCountry: "United Kingdom", longitude: -1, latitude: 51, altitude: 8000, velocity: 200, heading: 90, verticalRate: 0, onGround: false, isMilitary: true, squawk: null, lastSeen: 3 },
     ];
     render(<Header />);
-    expect(screen.getByText("2 aircraft")).toBeInTheDocument();
+    expect(screen.getByText("2 aéronefs")).toBeInTheDocument();
   });
 
   it("shows 0 counts when stores are empty", () => {
     render(<Header />);
-    expect(screen.getByText("0 events")).toBeInTheDocument();
-    expect(screen.getByText("0 quakes")).toBeInTheDocument();
-    expect(screen.getByText("0 aircraft")).toBeInTheDocument();
+    expect(screen.getByText("0 événements")).toBeInTheDocument();
+    expect(screen.getByText("0 séismes")).toBeInTheDocument();
+    expect(screen.getByText("0 aéronefs")).toBeInTheDocument();
   });
 
   it("renders settings button", () => {

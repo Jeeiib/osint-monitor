@@ -79,7 +79,7 @@ describe("socialStore", () => {
 
       await useSocialStore.getState().fetchPosts();
 
-      expect(global.fetch).toHaveBeenCalledWith("/api/social");
+      expect(global.fetch).toHaveBeenCalledWith("/api/social?lang=fr");
     });
 
     it("should handle HTTP errors silently", async () => {

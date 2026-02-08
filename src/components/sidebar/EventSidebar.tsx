@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { PanelRightClose, PanelRightOpen, Newspaper, Radio } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 import { useEventsStore, useSidebarStore, useSocialStore } from "@/lib/stores";
 import { EventCard } from "./EventCard";
 import { SocialPostCard } from "./SocialPostCard";
@@ -23,6 +24,7 @@ function LoadingSkeleton() {
 }
 
 function SocialFeedContent() {
+  const t = useTranslations("sidebar");
   const { posts, isLoading } = useSocialStore();
 
   if (isLoading && posts.length === 0) {
@@ -33,8 +35,8 @@ function SocialFeedContent() {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-slate-500">
         <Radio className="mb-2 h-8 w-8 opacity-30" />
-        <p className="text-sm">No posts yet</p>
-        <p className="mt-1 text-xs text-slate-600">Feed updates every 5 minutes</p>
+        <p className="text-sm">{t("noPostsYet")}</p>
+        <p className="mt-1 text-xs text-slate-600">{t("feedUpdates")}</p>
       </div>
     );
   }
@@ -49,24 +51,26 @@ function SocialFeedContent() {
 }
 
 export function EventSidebar() {
+  const t = useTranslations("sidebar");
+  const locale = useLocale();
   const { isOpen, activeTab, toggleSidebar, setTab } = useSidebarStore();
   const { events, isLoading: eventsLoading, fetchEvents, selectedEventIndex, selectEvent } = useEventsStore();
   const { fetchPosts: fetchSocialPosts } = useSocialStore();
 
   useEffect(() => {
-    fetchEvents();
-    fetchSocialPosts();
-    const eventsInterval = setInterval(fetchEvents, 10 * 60 * 1000);
-    const socialInterval = setInterval(fetchSocialPosts, 5 * 60 * 1000);
+    fetchEvents(locale);
+    fetchSocialPosts(locale);
+    const eventsInterval = setInterval(() => fetchEvents(locale), 10 * 60 * 1000);
+    const socialInterval = setInterval(() => fetchSocialPosts(locale), 5 * 60 * 1000);
     return () => {
       clearInterval(eventsInterval);
       clearInterval(socialInterval);
     };
-  }, [fetchEvents, fetchSocialPosts]);
+  }, [fetchEvents, fetchSocialPosts, locale]);
 
   const tabs = [
-    { id: "social" as const, label: "Social Feed", Icon: Radio, color: "emerald" },
-    { id: "articles" as const, label: "Articles", Icon: Newspaper, count: events.length, color: "red" },
+    { id: "social" as const, label: t("socialFeed"), Icon: Radio, color: "emerald" },
+    { id: "articles" as const, label: t("articles"), Icon: Newspaper, count: events.length, color: "red" },
   ];
 
   return (
@@ -91,7 +95,7 @@ export function EventSidebar() {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
-          <h2 className="text-sm font-semibold text-slate-300">Intelligence Feed</h2>
+          <h2 className="text-sm font-semibold text-slate-300">{t("title")}</h2>
           <button
             onClick={toggleSidebar}
             className="flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-300"
@@ -144,8 +148,8 @@ export function EventSidebar() {
             ) : events.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-slate-500">
                 <Newspaper className="mb-2 h-8 w-8 opacity-30" />
-                <p className="text-sm">No articles yet</p>
-                <p className="mt-1 text-xs text-slate-600">Click a red dot on the map</p>
+                <p className="text-sm">{t("noArticlesYet")}</p>
+                <p className="mt-1 text-xs text-slate-600">{t("clickRedDot")}</p>
               </div>
             ) : (
               <div className="space-y-2 p-3">

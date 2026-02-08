@@ -147,8 +147,8 @@ describe("fetchMilitaryAircraft", () => {
       expect(result[0].originCountry).toBe("Canada");
     });
 
-    it("should detect Russia from prefix '51'", async () => {
-      const mockAircraft = createMockAircraft({ hex: "51ABCD" });
+    it("should detect Russia from prefix '15'", async () => {
+      const mockAircraft = createMockAircraft({ hex: "15ABCD" });
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => createMockResponse([mockAircraft]),
@@ -367,6 +367,8 @@ describe("fetchMilitaryAircraft", () => {
         callsign: "USAF123",
         registration: "N12345",
         aircraftType: "F16",
+        description: null,
+        operator: null,
         originCountry: "USA",
         latitude: 37.8,
         longitude: -122.5,

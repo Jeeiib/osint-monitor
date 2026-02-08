@@ -1,6 +1,7 @@
 "use client";
 
 import { Plane, Ship } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMapStore } from "@/lib/stores";
 import type { Aircraft } from "@/types/aircraft";
 import type { Vessel } from "@/types/vessel";
@@ -17,20 +18,21 @@ interface VesselCardProps {
 
 type MilitaryCardProps = AircraftCardProps | VesselCardProps;
 
-function formatAltitude(meters: number | null): string {
-  if (!meters) return "N/A";
+function formatAltitude(meters: number | null, na: string): string {
+  if (!meters) return na;
   const feet = Math.round(meters / 0.3048);
   return `FL${Math.round(feet / 100)}`;
 }
 
-function formatSpeed(ms: number | null, unit: "ms" | "kts" = "ms"): string {
-  if (!ms) return "N/A";
+function formatSpeed(ms: number | null, na: string, unit: "ms" | "kts" = "ms"): string {
+  if (!ms) return na;
   if (unit === "kts") return `${ms.toFixed(1)} kts`;
   const kts = ms / 0.514444;
   return `${Math.round(kts)} kts`;
 }
 
 export function MilitaryCard(props: MilitaryCardProps) {
+  const t = useTranslations("military");
   const { flyTo } = useMapStore();
 
   if (props.type === "aircraft") {
@@ -52,7 +54,7 @@ export function MilitaryCard(props: MilitaryCardProps) {
             </span>
             {ac.isMilitary && (
               <span className="rounded bg-blue-600/80 px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                MIL
+                {t("mil")}
               </span>
             )}
           </div>
@@ -66,8 +68,8 @@ export function MilitaryCard(props: MilitaryCardProps) {
             )}
           </div>
           <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
-            <span>{formatAltitude(ac.altitude)}</span>
-            <span>{formatSpeed(ac.velocity)}</span>
+            <span>{formatAltitude(ac.altitude, t("na"))}</span>
+            <span>{formatSpeed(ac.velocity, t("na"))}</span>
             {ac.heading !== null && <span>{Math.round(ac.heading)}°</span>}
           </div>
         </div>
@@ -87,12 +89,12 @@ export function MilitaryCard(props: MilitaryCardProps) {
       </div>
       <div className="min-w-0 flex-1">
         <span className="text-sm font-medium text-slate-200">
-          {v.name || `MMSI ${v.mmsi}`}
+          {v.name || t("mmsi", { value: v.mmsi })}
         </span>
         <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
-          <span>{formatSpeed(v.speedOverGround, "kts")}</span>
+          <span>{formatSpeed(v.speedOverGround, t("na"), "kts")}</span>
           {v.heading !== null && <span>{Math.round(v.heading)}°</span>}
-          <span>MMSI {v.mmsi}</span>
+          <span>{t("mmsi", { value: v.mmsi })}</span>
         </div>
       </div>
     </div>

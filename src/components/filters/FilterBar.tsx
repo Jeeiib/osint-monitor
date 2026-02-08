@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useFilterStore } from "@/lib/stores";
 import { cn } from "@/lib/utils";
 import { Crosshair, Plane, Ship, Activity } from "lucide-react";
@@ -7,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 
 interface Category {
   key: "showEvents" | "showAircraft" | "showVessels" | "showEarthquakes";
-  label: string;
+  labelKey: string;
   color: string;
   activeClasses: string;
   Icon: LucideIcon;
@@ -16,28 +17,28 @@ interface Category {
 const categories: Category[] = [
   {
     key: "showEvents",
-    label: "Geopolitics",
+    labelKey: "geopolitics",
     color: "red",
     activeClasses: "border-red-500/40 bg-red-500/10 text-red-400",
     Icon: Crosshair,
   },
   {
     key: "showAircraft",
-    label: "Military Air",
+    labelKey: "militaryAir",
     color: "blue",
     activeClasses: "border-blue-500/40 bg-blue-500/10 text-blue-400",
     Icon: Plane,
   },
   {
     key: "showVessels",
-    label: "Naval",
+    labelKey: "naval",
     color: "cyan",
     activeClasses: "border-cyan-500/40 bg-cyan-500/10 text-cyan-400",
     Icon: Ship,
   },
   {
     key: "showEarthquakes",
-    label: "Seismic",
+    labelKey: "seismic",
     color: "orange",
     activeClasses: "border-orange-500/40 bg-orange-500/10 text-orange-400",
     Icon: Activity,
@@ -45,6 +46,7 @@ const categories: Category[] = [
 ];
 
 export function FilterBar() {
+  const t = useTranslations("filters");
   const store = useFilterStore();
 
   return (
@@ -64,7 +66,7 @@ export function FilterBar() {
             )}
           >
             <Icon className="h-3 w-3" />
-            {cat.label}
+            {t(cat.labelKey)}
           </button>
         );
       })}

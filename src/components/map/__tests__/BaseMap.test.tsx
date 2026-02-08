@@ -51,7 +51,7 @@ describe("BaseMap", () => {
   it("shows error message when MAPBOX_TOKEN is missing", () => {
     delete process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
     render(<BaseMap />);
-    expect(screen.getByText("Mapbox token manquant")).toBeInTheDocument();
+    expect(screen.getByText("Token Mapbox manquant")).toBeInTheDocument();
   });
 
   it("does not render map when token is missing", () => {
@@ -62,7 +62,7 @@ describe("BaseMap", () => {
 
   it("renders error with correct styling", () => {
     delete process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-    const { container } = render(<BaseMap />);
-    expect(screen.getByText("Mapbox token manquant")).toHaveClass("text-red-500");
+    render(<BaseMap />);
+    expect(screen.getByText("Token Mapbox manquant")).toHaveClass("text-red-500");
   });
 });

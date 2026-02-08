@@ -8,7 +8,7 @@ interface EventsStore {
   error: string | null;
   lastUpdate: Date | null;
   selectedEventIndex: number | null;
-  fetchEvents: () => Promise<void>;
+  fetchEvents: (lang?: string) => Promise<void>;
   selectEvent: (index: number | null) => void;
 }
 
@@ -20,10 +20,10 @@ export const useEventsStore = create<EventsStore>()(
     lastUpdate: null,
     selectedEventIndex: null,
 
-    fetchEvents: async () => {
+    fetchEvents: async (lang = "fr") => {
       set({ isLoading: true, error: null });
       try {
-        const response = await fetch("/api/events");
+        const response = await fetch(`/api/events?lang=${lang}`);
         if (!response.ok) throw new Error("Failed to fetch events");
         const data = await response.json();
         set({ events: data, isLoading: false, lastUpdate: new Date() });
